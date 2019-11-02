@@ -9,12 +9,14 @@ import {
   Dimensions,
   Modal,
   AsyncStorage,
+  Picker,
 } from 'react-native';
 import {Button, Header, Body, Title, Item, Input} from 'native-base';
 
 import {FlatList} from 'react-native-gesture-handler';
 import {connect} from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import {Customer} from './Customer';
 
 const {height, width} = Dimensions.get('window');
 // console.log(webtoons);
@@ -116,6 +118,7 @@ class Checkin extends Component {
     console.disableYellowBox = true;
     const {checkins} = this.props.checkinLocal;
     const {room, customer, duration} = this.state;
+    const {cust} = this.props.custLocal;
     return (
       <View style={styles.mainView}>
         <View style={{flex: 1.5}}>
@@ -157,12 +160,17 @@ class Checkin extends Component {
                   </Item>
                   <Text style={styles.modalItem}> Customer :*</Text>
                   <Item>
-                    <Input
-                      onChangeText={input => this.checkCustomer(input)}
-                      style={styles.inputStyle}
-                      autoCapitalize="none"
-                      keyboardType="default"
-                    />
+                    <View style={styles.inputStyle}>
+                      <Picker
+                        selectedValue={this.state.customer}
+                        style={styles.inputStyle}
+                        onValueChange={(itemValue, itemIndex) =>
+                          this.setState({language: itemValue})
+                        }>
+                        <Picker.Item label="Java" value="java" />
+                        <Picker.Item label="JavaScript" value="js" />
+                      </Picker>
+                    </View>
                   </Item>
                   <Text style={styles.modalItem}> Duration :*</Text>
                   <Item>
@@ -224,12 +232,18 @@ class Checkin extends Component {
                 </Item>
                 <Text style={styles.modalItem}> Customer :*</Text>
                 <Item>
-                  <Input
-                    value={customer}
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    disabled
-                  />
+                  <View style={styles.inputStyle}>
+                    <Picker
+                      enabled={false}
+                      selectedValue={this.state.customer}
+                      style={styles.inputStyle}
+                      onValueChange={(itemValue, itemIndex) =>
+                        this.setState({language: itemValue})
+                      }>
+                      <Picker.Item label={customer} value={id} fontSize={30} />
+                      <Text />
+                    </Picker>
+                  </View>
                 </Item>
                 <Text style={styles.modalItem}> Duration :*</Text>
                 <Item>
@@ -268,6 +282,7 @@ class Checkin extends Component {
 const mapStateToProps = state => {
   return {
     checkinLocal: state.checkins,
+    custLocal: state.cust,
   };
 };
 
@@ -528,9 +543,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 5,
     fontSize: 35,
-    height: 60,
+    height: height * 0.06,
     paddingLeft: 15,
     alignContent: 'center',
+    width: width * 0.8,
   },
   dimBg: {
     backgroundColor: 'rgba(0,0,0,0.6)',
