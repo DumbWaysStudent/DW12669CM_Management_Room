@@ -1,24 +1,34 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
-import {View, TouchableOpacity, Text, AsyncStorage, Image} from 'react-native';
-import {Header, Title, Right, Body} from 'native-base';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  AsyncStorage,
+  Image,
+  Modal,
+  Dimensions,
+} from 'react-native';
+import {Header, Title, Body, Card} from 'native-base';
+import {connect} from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 // const image= this.props.navigation.getParam('image');
 // const profName= this.props.navigation.getParam('name');
+const {width} = Dimensions.get('window');
 export class Profile extends Component {
   state = {
-    // image: this.props.navigation.getParam('image'),
-    // name: this.props.navigation.getParam('name'),
+    // image: this.props.adminsLocal.login.image,
+    // name: this.props.adminsLocal.login.name,
+    // email: this.props.adminsLocal.login.email,
     image: '',
     name: '',
+    email: '',
   };
   async componentDidMount() {
-    const img = await AsyncStorage.getItem('image');
-    const username = await AsyncStorage.getItem('name');
-    console.log('=============');
-    console.log(img);
-    console.log('=============');
-    this.setState({name: username, image: img});
+    const image = await AsyncStorage.getItem('image');
+    const name = await AsyncStorage.getItem('name');
+    const email = await AsyncStorage.getItem('email');
+    this.setState({name, image, email});
   }
   async handleLogOut() {
     await AsyncStorage.removeItem('token');
@@ -31,36 +41,34 @@ export class Profile extends Component {
     this.props.navigation.navigate('myWebToon');
   }
   render() {
-    console.log('================');
-    console.log(this.state.image);
-    console.log('================');
     return (
-      <View style={{flex: 1}}>
+      <View style={styles.mainView}>
         <View style={{flex: 1}}>
           <Header style={styles.header}>
             <Body>
-              <Title style={styles.titleHeader}> Profile </Title>
+              <Title style={styles.titleHeader}> Admins </Title>
             </Body>
-            <Right>
-              <TouchableOpacity onPress={() => this.handleEditProfile()}>
-                <Icon name="pencil" style={styles.iconHeader} />
-              </TouchableOpacity>
-            </Right>
           </Header>
         </View>
-        <View style={styles.profile}>
-          <Image source={{uri: this.state.image}} style={styles.iconProfile} />
-          <Text style={styles.iconName}>{this.state.name}</Text>
-        </View>
-        <View style={{flex: 5.2}}>
-          <View style={styles.viewButtonText}>
-            <TouchableOpacity
-              style={styles.opacity}
-              onPress={() => this.handleMytoon()}>
-              <Text style={styles.text}> My Webtoon Creation </Text>
-              <Icon name="angle-right" style={styles.iconButtonText} />
-            </TouchableOpacity>
+        <Card style={styles.profile}>
+          <View style={{justifyContent: 'center'}}>
+            <Image
+              source={{uri: this.state.image}}
+              style={styles.iconProfile}
+            />
           </View>
+          <View style={{justifyContent: 'center'}}>
+            <Text style={styles.iconName}>
+              {'Email   : '}
+              {this.state.email}
+            </Text>
+            <Text style={styles.iconName}>
+              {'Name   : '}
+              {this.state.name}
+            </Text>
+          </View>
+        </Card>
+        <View style={styles.logout}>
           <View style={styles.viewButtonText}>
             <TouchableOpacity
               style={styles.opacity}
@@ -73,17 +81,22 @@ export class Profile extends Component {
     );
   }
 }
-
-export default Profile;
+// const mapStateToProps = state => {
+//   return {
+//     adminsLocal: state.login,
+//   };
+// };
+export default connect(/*mapStateToProps}*/)(Profile);
 
 const styles = {
   header: {
-    backgroundColor: 'white',
+    backgroundColor: '#718093',
     height: 100,
   },
   titleHeader: {
-    color: 'black',
+    color: 'white',
     fontSize: 40,
+    alignSelf: 'center',
   },
   iconHeader: {
     color: 'orange',
@@ -91,36 +104,53 @@ const styles = {
     marginRight: 10,
   },
   profile: {
-    alignSelf: 'center',
-    flex: 3.8,
     marginTop: 40,
+    alignSelf: 'center',
+    flex: 2,
+    width: width * 0.95,
+    flexDirection: 'row',
+    borderRadius: 100,
+    paddingLeft: 10,
+    backgroundColor: '#2f3640',
+  },
+  mainView: {
+    backgroundColor: '#dfe4ea',
+    flex: 1,
   },
   iconProfile: {
-    width: 200,
-    height: 200,
+    borderWidth: 1,
+    borderColor: '#f1f2f6',
+    width: 180,
+    height: 180,
     borderRadius: 100,
-    marginTop: 40,
-    color: 'grey',
     alignSelf: 'center',
   },
   iconName: {
-    fontSize: 50,
-    fontWeight: 'bold',
-    alignSelf: 'center',
+    fontSize: 34,
+    marginLeft: 20,
+    color: 'white',
   },
   viewButtonText: {
-    borderColor: 'black',
-    borderWidth: 1.1,
-    flex: 0.13,
+    paddingTop: 10,
+    backgroundColor: '#353b48',
+    alignSelf: 'center',
+    flex: 0.14,
+    width: width * 0.4,
+    borderRadius: 15,
+  },
+  logout: {
+    marginTop: 40,
+    flex: 5.2,
   },
   opacity: {
     flex: 1,
-    flexDirection: 'row',
+    alignSelf: 'center',
   },
   text: {
     fontSize: 40,
     marginBottom: 10,
     flex: 9,
+    color: 'white',
   },
   iconButtonText: {
     flex: 1,

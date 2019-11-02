@@ -5,19 +5,12 @@ import {createStackNavigator} from 'react-navigation-stack';
 
 import room from '../screen/Room';
 import checkin from '../screen/Checkin';
-import favorite from '../screen/Customer';
+import customer from '../screen/Customer';
 import profile from '../screen/Profile';
-import editProfile from '../screen/EditProfile';
 
 const stack = createStackNavigator({
   Profile: {
     screen: profile,
-    navigationOptions: {
-      header: null,
-    },
-  },
-  editProfile: {
-    screen: editProfile,
     navigationOptions: {
       header: null,
     },
@@ -43,8 +36,8 @@ export default createMaterialBottomTabNavigator(
         ),
       },
     },
-    Favorite: {
-      screen: favorite,
+    customer: {
+      screen: customer,
       navigationOptions: {
         tabBarLabel: 'Customer',
         tabBarIcon: ({tintColor}) => (
@@ -64,10 +57,15 @@ export default createMaterialBottomTabNavigator(
   },
   {
     intialRouteName: 'room',
-    order: ['checkin', 'room', 'Favorite', 'Stack'],
-    activeColor: 'orange',
-    barStyle: {backgroundColor: 'white', paddingBottom: 15},
-    borderTopColor: 'silver',
+    order: ['checkin', 'room', 'customer', 'Stack'],
+    activeColor: 'white',
+    inactiveColor: 'black',
+    barStyle: {
+      backgroundColor: '#718093',
+      height: 80,
+      justifyContent: 'space-evenly',
+    },
+    borderTopColor: 'black',
     borderTopWidth: 3,
   },
 );

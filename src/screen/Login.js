@@ -49,13 +49,11 @@ export class Login extends Component {
     await this.props.handleLogin(email, password);
     const users = this.props.userLocal.login;
     if (users.token) {
-      console.log('===========');
-      console.log(users.id);
-      console.log('===========');
       await AsyncStorage.multiSet([
         ['token', users.token],
         ['userid', `${users.id}`],
         ['name', users.name],
+        ['email', users.email],
         ['image', users.image],
       ]);
       const resetAction = StackActions.reset({

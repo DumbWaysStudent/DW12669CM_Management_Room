@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     // associations can be defined here
     rooms.hasMany(models.orders, {
       foreignKey: 'id',
+      as: 'order',
     });
   };
   return rooms;

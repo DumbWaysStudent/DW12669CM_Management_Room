@@ -7,9 +7,6 @@ const initialState = {
 export default function reducerLogin(state = initialState, action) {
   switch (action.type) {
     case `${types.LOGIN}_PENDING`:
-      console.log('=========');
-      console.log(action.payload);
-      console.log('=========');
       return {
         ...state,
       };

@@ -4,6 +4,7 @@ const rooms = models.rooms;
 exports.showAllRoom = async (req, res) => {
   const find = await rooms.findAll({
     attributes: ['id', 'name'],
+    order: [['id', 'ASC']],
   });
   res.send(find);
 };
@@ -19,8 +20,9 @@ exports.addRoom = (req, res) => {
         result,
       });
     })
-    .catch(() =>
+    .catch(err =>
       res.send({
+        err,
         message: 'fail to insert data',
         data: req.params.idWt,
       }),

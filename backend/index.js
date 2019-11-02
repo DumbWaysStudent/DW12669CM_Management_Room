@@ -10,6 +10,7 @@ const TodoController = require('./controller/webtoons');
 const AuthController = require('./controller/auth');
 const RoomController = require('./controller/rooms');
 const CustomerController = require('./controller/customers');
+const CheckinController = require('./controller/checkin');
 
 //middleware
 const {authenticated} = require('./middleware');
@@ -39,6 +40,11 @@ app.group('/api/v1', router => {
   router.post('/customer', authenticated, CustomerController.addCustomer);
   router.put('/customer/:id', authenticated, CustomerController.updateCustomer);
   //
+  //
+  //checkin
+  router.get('/checkins', authenticated, CheckinController.showCheckin);
+  // router.post('/customer', authenticated, CustomerController.addCustomer);
+  // router.put('/customer/:id', authenticated, CustomerController.updateCustomer);
   //
   router.get('/webtoon', TodoController.findToonTitle);
   router.get('/webtoonfav/:id', TodoController.showFavourite);

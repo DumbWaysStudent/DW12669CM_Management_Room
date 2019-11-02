@@ -4,6 +4,7 @@ const customers = models.customers;
 exports.showAllCustomers = async (req, res) => {
   const find = await customers.findAll({
     attributes: ['id', 'name', 'identity_number', 'phone_number', 'image'],
+    order: [['id', 'ASC']],
   });
   res.send(find);
 };

@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       as: 'customerId',
       foreignKey: 'customer',
     });
+
     orders.belongsTo(models.rooms, {
       as: 'roomId',
       foreignKey: 'room',

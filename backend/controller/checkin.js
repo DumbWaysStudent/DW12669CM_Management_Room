@@ -3,22 +3,21 @@ const room = models.rooms;
 const checkin = models.orders;
 const customer = models.customers;
 
-exports.showAllCustomers = async (req, res) => {
+exports.showCheckin = async (req, res) => {
   const find = await room.findAll({
     attributes: ['id', 'name'],
+    order: [['id', 'ASC']],
     include: [
       {
         model: checkin,
-        as: 'roomId',
-        // where: {
-        //   room: room.id,
-        // },
-        // include: [
-        //   {
-        //     model: customer,
-        //     as: customer
-        //   }
-        // ]
+        as: 'order',
+        required: false,
+        include: [
+          {
+            model: customer,
+            as: 'customerId',
+          },
+        ],
       },
     ],
   });
