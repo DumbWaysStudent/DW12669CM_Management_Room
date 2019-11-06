@@ -9,6 +9,8 @@ import {
   Modal,
   Dimensions,
   AsyncStorage,
+  FlatList,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {
   Header,
@@ -23,10 +25,33 @@ import {
 } from 'native-base';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {connect} from 'react-redux';
-
-import {FlatList} from 'react-native-gesture-handler';
-
+import ImagePicker from 'react-native-image-picker';
+import Spinner from 'react-native-loading-spinner-overlay';
+import * as firebase from 'firebase';
 import * as actionCustomer from './../redux/actions/actionCustomers';
+import moment from 'moment';
+
+const options = {
+  title: 'Select Avatar',
+  customButtons: [{name: 'fb', title: 'Choose Photo from Facebook'}],
+  storageOptions: {
+    skipBackup: true,
+  },
+};
+var firebaseConfig = {
+  apiKey: 'AIzaSyAggiEF8xiE5k4OsJVWza9imk5KNJ6xMp8',
+  authDomain: 'https://managementroom-cfe36.firebaseapp.com',
+  databaseURL: 'https://managementroom-cfe36.firebaseio.com',
+  projectId: 'managementroom-cfe36',
+  storageBucket: 'gs://managementroom-cfe36.appspot.com',
+  messagingSenderId: '786203632527',
+  appId: '1:786203632527:web:70f7bc64e85830327521fa',
+  measurementId: 'G-4RTZEJEZPB',
+};
+// Initialize Firebase
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 const {height, width} = Dimensions.get('window');
 export class Customer extends Component {
@@ -36,14 +61,63 @@ export class Customer extends Component {
     name: '',
     identity_number: '',
     phone_number: '',
-    image:
-      'https://pm1.narvii.com/6543/8de18197fc46b84818413a197bf52c78d91eb9e7_hq.jpg',
+    image: '',
     isEmpName: true,
     isEmpIdCard: true,
     isEmpPhoneNum: true,
     modalAdd: false,
     modalEdit: false,
+    avatarSource: '',
+    spinner: false,
   };
+  async uploadImageAsync(uri) {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+    const ref = firebase
+      .storage()
+      .ref()
+      .child(moment().toISOString());
+    const snapshot = await ref.put(blob);
+    // We're done with the blob, close and release it
+    blob.close();
+    console.log('link', await snapshot.ref.getDownloadURL());
+    this.setState({avatarSource: await snapshot.ref.getDownloadURL()});
+    console.log(this.state.avatarSource);
+    return await snapshot.ref.getDownloadURL();
+  }
+  imagePicker() {
+    ImagePicker.showImagePicker(options, response => {
+      console.log('Response = ', response);
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      } else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+      } else {
+        const source = {uri: response.uri};
+        // You can also display the image using data:
+        // const source = { uri: 'data:image/jpeg;base64,' + response.data };
+        this.setState({
+          avatarSource: source.uri,
+        });
+        this.uploadImageAsync(this.state.avatarSource);
+      }
+    });
+  }
   listFavoriteAll(item) {
     return (
       <View key={item.id}>
@@ -113,38 +187,51 @@ export class Customer extends Component {
       identity_number: item.identity_number,
       phone_number: item.phone_number,
       image: item.image,
+      avatarSource: item.image,
       modalEdit: true,
       isEmpName: false,
       isEmpIdCard: false,
       isEmpPhoneNum: false,
     });
   }
-  async editCustomer() {
-    const {id, name, identity_number, phone_number, image} = this.state;
-    const tok = await AsyncStorage.getItem('token');
-    await this.props.handleEditCustomer(
-      tok,
-      id,
-      name,
-      identity_number,
-      phone_number,
-      image,
-    );
-    this.getData();
-    this.setState({modalEdit: false});
+  editCustomer() {
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const {
+        id,
+        name,
+        identity_number,
+        phone_number,
+        avatarSource,
+      } = this.state;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleEditCustomer(
+        tok,
+        id,
+        name,
+        identity_number,
+        phone_number,
+        avatarSource,
+      );
+      this.getData();
+      this.setState({modalEdit: false, avatarSource: '', spinner: false});
+    }, 1500);
   }
-  async addCustomer() {
-    const {name, identity_number, phone_number, image} = this.state;
-    const tok = await AsyncStorage.getItem('token');
-    await this.props.handleAddCustomer(
-      tok,
-      name,
-      identity_number,
-      phone_number,
-      image,
-    );
-    this.getData();
-    this.setState({modalAdd: false});
+  addCustomer() {
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const {name, identity_number, phone_number, avatarSource} = this.state;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleAddCustomer(
+        tok,
+        name,
+        identity_number,
+        phone_number,
+        avatarSource,
+      );
+      this.getData();
+      this.setState({modalAdd: false, avatarSource: '', spinner: false});
+    }, 1500);
   }
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
@@ -156,11 +243,12 @@ export class Customer extends Component {
   }
 
   render() {
+    console.disableYellowBox = true;
     const {cust} = this.props.custLocal;
     const {name, identity_number, phone_number, image} = this.state;
     return (
       <View style={styles.mainView}>
-        <View style={{flex: 1.5}}>
+        <View style={{flex: 1.2}}>
           <Header style={styles.header}>
             <Body>
               <Title style={styles.titleHeader}> Customers </Title>
@@ -168,7 +256,7 @@ export class Customer extends Component {
           </Header>
         </View>
         <View style={{flex: 9, marginHorizontal: 20}}>
-          <View style={{flex: 1.5}}>
+          <View style={{flex: 0.8}}>
             <View style={styles.view}>
               <Input
                 style={styles.searchBar}
@@ -182,7 +270,7 @@ export class Customer extends Component {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={{flex: 9.2}}>
+          <View style={{flex: 10}}>
             <FlatList
               // style={styles.flatList1}
               data={cust.filter(item =>
@@ -197,7 +285,6 @@ export class Customer extends Component {
           <Fab
             onPress={() => this.setState({modalAdd: true})}
             active="true"
-            containerStyle={{}}
             style={styles.fab}
             position="bottomRight">
             <Icon style={styles.fabIcon} name="plus" />
@@ -208,7 +295,7 @@ export class Customer extends Component {
           visible={this.state.modalAdd}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
                 <Text style={styles.titleView}> Add New Customer </Text>
@@ -244,11 +331,21 @@ export class Customer extends Component {
                     placeholder="Input Customer Phone Number"
                   />
                 </Item>
-                <TouchableOpacity>
-                  <Image
-                    source={this.state.avatarSource}
-                    style={styles.imageProfile}
-                  />
+                <TouchableOpacity onPress={() => this.imagePicker()}>
+                  {this.state.avatarSource === '' ? (
+                    <Image
+                      style={styles.imageProfile}
+                      source={{
+                        uri:
+                          'https://p7.hiclipart.com/preview/858/581/271/user-computer-icons-system-chinese-wind-title-column.jpg',
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={{uri: this.state.avatarSource}}
+                      style={styles.imageProfile}
+                    />
+                  )}
                   <Icon name="camera" style={styles.iconProfile} />
                 </TouchableOpacity>
                 <View style={{flexDirection: 'row', justifyContent: 'center'}}>
@@ -265,6 +362,7 @@ export class Customer extends Component {
                         isEmpName: true,
                         isEmpIdCard: true,
                         isEmpPhoneNum: true,
+                        avatarSource: '',
                       })
                     }
                     disabled={false}>
@@ -284,14 +382,14 @@ export class Customer extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
         {/* Modal that use to Edit an existing room */}
         <Modal
           visible={this.state.modalEdit}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
                 <Text style={styles.titleView}> Update Customer </Text>
@@ -330,8 +428,20 @@ export class Customer extends Component {
                     placeholder="Input Customer Phone Number"
                   />
                 </Item>
-                <TouchableOpacity>
-                  <Image source={{uri: image}} style={styles.imageProfile} />
+                <TouchableOpacity onPress={() => this.imagePicker()}>
+                  {this.state.avatarSource === '' ? (
+                    <Image
+                      style={styles.imageProfile}
+                      source={{
+                        uri: image,
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={{uri: this.state.avatarSource}}
+                      style={styles.imageProfile}
+                    />
+                  )}
                   <Icon name="camera" style={styles.iconProfile} />
                 </TouchableOpacity>
                 <View style={{flexDirection: 'row', justifyContent: 'center'}}>
@@ -348,6 +458,7 @@ export class Customer extends Component {
                         isEmpName: true,
                         isEmpIdCard: true,
                         isEmpPhoneNum: true,
+                        avatarSource: '',
                       })
                     }
                     disabled={false}>
@@ -367,8 +478,15 @@ export class Customer extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
+        <View style={styles.container}>
+          <Spinner
+            visible={this.state.spinner}
+            textContent={'Loading...'}
+            textStyle={styles.spinnerTextStyle}
+          />
+        </View>
       </View>
     );
   }
@@ -404,8 +522,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontStyle: 'italic',
   },
+  spinnerTextStyle: {
+    color: '#FFF',
+  },
   fab: {
-    backgroundColor: '#2f3640',
+    backgroundColor: '#7f8fa6',
     width: 80,
     height: 80,
     borderRadius: 100,

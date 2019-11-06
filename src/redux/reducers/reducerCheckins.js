@@ -24,33 +24,33 @@ export default function reducerCheckins(state = initialState, action) {
         isError: true,
       };
     //
-    // =================== ADD CHECKINS ================================
-    case `${types.ADD_CHECKINS}_PENDING`:
+    // =================== CHECKINS ================================
+    case `${types.CHECKINS}_PENDING`:
       return {
         ...state,
       };
-    case `${types.ADD_CHECKINS}_FULFILLED`:
+    case `${types.CHECKINS}_FULFILLED`:
       return {
         ...state,
         response: action.payload.data,
       };
-    case `${types.ADD_CHECKINS}_REJECTED`:
+    case `${types.CHECKINS}_REJECTED`:
       return {
         ...state,
         isError: true,
       };
     //
-    // =================== EDIT CHECKINS ================================
-    case `${types.UPDATE_CHECKINS}_PENDING`:
+    // =================== CheckOut ================================
+    case `${types.CHECKOUT}_PENDING`:
       return {
         ...state,
       };
-    case `${types.UPDATE_CHECKINS}_FULFILLED`:
+    case `${types.CHECKOUT}_FULFILLED`:
       return {
         ...state,
         response: action.payload.data,
       };
-    case `${types.UPDATE_CHECKINS}_REJECTED`:
+    case `${types.CHECKOUT}_REJECTED`:
       return {
         ...state,
         isError: true,

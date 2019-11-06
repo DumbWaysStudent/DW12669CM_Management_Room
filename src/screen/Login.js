@@ -1,13 +1,24 @@
 /* eslint-disable no-alert */
 /* eslint-disable react-native/no-inline-styles */
 import React, {Component} from 'react';
-import {Text, View, StyleSheet, AsyncStorage} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  AsyncStorage,
+  ImageBackground,
+  Dimensions,
+  KeyboardAvoidingView,
+} from 'react-native';
 import {Button, Input, Item} from 'native-base';
 import {StackActions, NavigationActions} from 'react-navigation';
 import PasswordInputText from 'react-native-hide-show-password-input';
 import * as actionUsers from './../redux/actions/actionUsers';
+import Spinner from 'react-native-loading-spinner-overlay';
 import {connect} from 'react-redux';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
+const {height, width} = Dimensions.get('window');
 export class Login extends Component {
   constructor(props) {
     super(props);
@@ -70,38 +81,54 @@ export class Login extends Component {
     console.disableYellowBox = true;
     return (
       <View style={{flex: 1}}>
-        <View style={styles.subViewTitle}>
-          <Text style={styles.title}> Log In </Text>
-          <Text style={styles.subTitle}> Login with your WEBTOON account </Text>
-        </View>
-        <View style={styles.subViewInput}>
-          <Text style={{alignItems: 'flex-start'}}> Email </Text>
-          <Item>
-            <Input
-              onChangeText={text => this.checkMail(text)}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholder="Input your email"
-            />
-          </Item>
-
-          <PasswordInputText
-            placeholder="input your password"
-            style={{borderColor: 'black'}}
-            onChangeText={password => this.checkPassword(password)}
-          />
-
-          <Button
-            rounded
-            style={{marginTop: 20, justifyContent: 'center'}}
-            onPress={() => this.handleLogin()}
-            disabled={this.check(
-              this.state.isMailValid,
-              this.state.isPasswordValid,
-            )}>
-            <Text>Login</Text>
-          </Button>
-        </View>
+        <ImageBackground
+          style={styles.imageBackground}
+          source={{
+            uri:
+              'https://m.media-amazon.com/images/M/MV5BNzQ2MzQzNDktMTg4ZC00ZDE0LThhNmUtYWMxYmI3OTIzYzZlXkEyXkFqcGdeQXVyMzE4MDkyNTA@._V1_.jpg',
+          }}>
+          <KeyboardAvoidingView style={styles.dim} behavior="padding" enabled>
+            <View style={styles.subViewTitle}>
+              <Text style={styles.title}> Welcome </Text>
+              <Text style={styles.subTitle}>
+                {' '}
+                Please input your login information{' '}
+              </Text>
+            </View>
+            <View style={styles.subViewInput}>
+              <Text style={styles.inputTitle}> Email </Text>
+              <Item style={styles.itemPass}>
+                <Input
+                  onChangeText={text => this.checkMail(text)}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  placeholder="Input your email"
+                  style={styles.input}
+                />
+              </Item>
+              <Text style={styles.inputTitle}> Password </Text>
+              <Item style={styles.itemPass}>
+                <Input
+                  keyboardType="visible-password"
+                  placeholder="input your password"
+                  style={styles.input}
+                  onChangeText={password => this.checkPassword(password)}
+                />
+                <Icon name="eye" style={styles.icon} />
+              </Item>
+              <Button
+                rounded
+                style={styles.button}
+                onPress={() => this.handleLogin()}
+                disabled={this.check(
+                  this.state.isMailValid,
+                  this.state.isPasswordValid,
+                )}>
+                <Text style={styles.input}>Login</Text>
+              </Button>
+            </View>
+          </KeyboardAvoidingView>
+        </ImageBackground>
       </View>
     );
   }
@@ -127,26 +154,63 @@ export default connect(
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 60,
+    fontSize: 90,
     textAlign: 'center',
     textAlignVertical: 'center',
+    color: '#eccc68',
   },
   subTitle: {
-    fontSize: 18,
+    fontSize: 30,
     textAlign: 'center',
+    color: '#eccc68',
   },
   subViewTitle: {
     flex: 1,
     justifyContent: 'center',
-    marginTop: 100,
+    marginTop: height * 0.17,
   },
   subViewInput: {
     flex: 2,
-    marginHorizontal: 25,
+    marginHorizontal: height * 0.018,
   },
   subViewLogin: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  imageBackground: {
+    height,
+    width,
+  },
+  dim: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    height,
+    width,
+    justifyContent: 'center',
+  },
+  inputTitle: {
+    alignItems: 'flex-start',
+    color: '#dff9fb',
+    fontSize: 30,
+  },
+  input: {
+    color: '#f1f2f6',
+    fontSize: 25,
+  },
+  itemPass: {
+    backgroundColor: '#ffeaa7',
+    borderRadius: height * 0.06,
+    height: height * 0.06,
+    marginVertical: height * 0.005,
+    paddingHorizontal: width * 0.03,
+  },
+  icon: {
+    color: 'black',
+    fontSize: width * 0.05,
+  },
+  button: {
+    marginTop: 20,
+    justifyContent: 'center',
+    height: height * 0.06,
   },
 });

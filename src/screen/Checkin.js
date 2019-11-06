@@ -5,18 +5,19 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  Image,
   Dimensions,
   Modal,
   AsyncStorage,
   Picker,
+  FlatList,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {Button, Header, Body, Title, Item, Input} from 'native-base';
+import Spinner from 'react-native-loading-spinner-overlay';
+import moment from 'moment';
+import * as actionCheckin from './../redux/actions/actionOrders';
 
-import {FlatList} from 'react-native-gesture-handler';
 import {connect} from 'react-redux';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import {Customer} from './Customer';
 
 const {height, width} = Dimensions.get('window');
 // console.log(webtoons);
@@ -24,15 +25,45 @@ class Checkin extends Component {
   state = {
     roomId: '',
     room: '',
+    orderId: '',
     customerId: '',
     customer: '',
     duration: '',
     orderEndTime: '',
-    isEmpName: true,
+    isEmpCust: true,
     isEmpDur: true,
     modalCheckIn: false,
     modalCheckOut: false,
+    time: '',
   };
+  componentWillMount() {
+    this.getCurrentTime();
+  }
+  getCurrentTime = () => {
+    this.setState({
+      time: moment().format('dddd, MMMM Do YYYY, h:mm:ss a'),
+    });
+  };
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
+
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      this.getCurrentTime();
+      this.autoCheckOut();
+    }, 1000);
+  }
+  async autoCheckOut() {
+    const data = this.props.checkinLocal.checkins;
+    data.map(item => {
+      item.order.length > 0
+        ? moment(item.order[0].order_end_time).diff(moment(), 's') <= 0
+          ? (this.setState({orderId: item.order[0].id}), this.checkout())
+          : null
+        : null;
+    });
+  }
   listAll(item) {
     return (
       <View key={item.id}>
@@ -53,7 +84,22 @@ class Checkin extends Component {
           <Text
             style={item.order.length > 0 ? styles.duration2 : styles.duration}>
             {item.order.length > 0
-              ? item.order[0].duration + ' Minutes Left'
+              ? item.order[0].customerId.name +
+                '\n' +
+                moment(item.order[0].order_end_time).diff(moment(), 'hour') +
+                ' : ' +
+                (moment(item.order[0].order_end_time).diff(
+                  moment(),
+                  'minutes',
+                ) %
+                  60) +
+                ' : ' +
+                (moment(item.order[0].order_end_time).diff(
+                  moment(),
+                  'seconds',
+                ) %
+                  60) +
+                ' Left'
               : 'available'}
           </Text>
         </TouchableOpacity>
@@ -67,66 +113,104 @@ class Checkin extends Component {
   modalCheckOut(item) {
     this.setState({
       modalCheckOut: true,
+      roomId: item.id,
       room: item.name,
+      orderId: item.order[0].id,
+      customerId: item.order[0].customerId.id,
       customer: item.order[0].customerId.name,
       duration: item.order[0].duration,
+      orderEndTime: item.order[0].order_end_time,
     });
   }
-
   checkCustomer(input) {
     if (input === '') {
-      this.setState({isEmpName: true});
+      this.setState({isEmpCust: true});
     } else {
-      this.setState({isEmpName: false});
+      this.setState({isEmpCust: false});
     }
-    this.setState({name: input});
+    this.setState({customerId: input});
   }
   checkDuration(input) {
-    if (input === '') {
-      this.setState({isEmpDur: true});
-    } else {
+    this.setState({
+      duration: Number(input),
+      orderEndTime: moment()
+        .add(Number(input), 'm')
+        .toJSON(),
+    });
+    let reg = /^[0-9]*$/;
+    if (reg.test(input) && input !== '') {
       this.setState({isEmpDur: false});
+    } else {
+      this.setState({isEmpDur: true});
     }
-    this.setState({duration: input});
   }
-  check(name, duration) {
-    if (name === false && duration === false) {
+  check(cust, duration) {
+    if (cust === false && duration === false) {
       return false;
     } else {
       return true;
     }
   }
-  async checkin() {
-    const {name, identity_number, phone_number, image} = this.state;
-    const tok = await AsyncStorage.getItem('token');
-    await this.props.handleAddCustomer(
-      tok,
-      name,
-      identity_number,
-      phone_number,
-      image,
-    );
-    this.getData();
-    this.setState({modalAdd: false});
+  checkin() {
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const {roomId, customerId, duration, orderEndTime} = this.state;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleCheckIn(
+        tok,
+        duration,
+        orderEndTime,
+        customerId,
+        roomId,
+      );
+      this.getData();
+      this.setState({modalCheckIn: false, spinner: false});
+    }, 1500);
   }
+
+  checkout() {
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const {orderId} = this.state;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleCheckOut(tok, orderId);
+      this.getData();
+      this.setState({modalCheckOut: false, spinner: false});
+    }, 1500);
+  }
+
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
-    await this.props.handleGetCustomer(tok);
+    await this.props.handleGetCheckin(tok);
   };
 
   render() {
     console.disableYellowBox = true;
     const {checkins} = this.props.checkinLocal;
-    const {room, customer, duration} = this.state;
+    const {id, room, customer, duration, time} = this.state;
     const {cust} = this.props.custLocal;
+    // console.log('room ID     :' + this.state.roomId);
+    // console.log('customer ID :' + this.state.customerId);
+    // console.log('duration    :' + this.state.duration);
+    // console.log('endTime     :' + this.state.orderEndTime);
     return (
       <View style={styles.mainView}>
+        <View style={styles.container}>
+          <Spinner
+            visible={this.state.spinner}
+            textContent={'Loading...'}
+            textStyle={styles.spinnerTextStyle}
+          />
+        </View>
         <View style={{flex: 1.5}}>
           <Header style={styles.header}>
             <Body>
               <Title style={styles.titleHeader}> Checkin </Title>
             </Body>
           </Header>
+        </View>
+        <View style={{alignItems: 'flex-end'}} flex={0.8}>
+          <Text>{`${time}`}</Text>
         </View>
         <View flex={9}>
           <FlatList
@@ -142,7 +226,7 @@ class Checkin extends Component {
           visible={this.state.modalCheckIn}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
                 <Text style={styles.titleView}> CheckIn </Text>
@@ -162,13 +246,19 @@ class Checkin extends Component {
                   <Item>
                     <View style={styles.inputStyle}>
                       <Picker
-                        selectedValue={this.state.customer}
+                        selectedValue={this.state.customerId}
+                        mode={'dropdown'}
                         style={styles.inputStyle}
-                        onValueChange={(itemValue, itemIndex) =>
-                          this.setState({language: itemValue})
-                        }>
-                        <Picker.Item label="Java" value="java" />
-                        <Picker.Item label="JavaScript" value="js" />
+                        onValueChange={item => this.checkCustomer(item)}>
+                        {cust.map((item, index) => {
+                          return (
+                            <Picker.Item
+                              label={item.name}
+                              value={item.id}
+                              key={index}
+                            />
+                          );
+                        })}
                       </Picker>
                     </View>
                   </Item>
@@ -179,6 +269,7 @@ class Checkin extends Component {
                       style={styles.inputStyle}
                       autoCapitalize="none"
                       keyboardType="number-pad"
+                      placeholder="... in Minute"
                     />
                   </Item>
                 </View>
@@ -189,7 +280,7 @@ class Checkin extends Component {
                     onPress={() =>
                       this.setState({
                         modalCheckIn: false,
-                        name: '',
+                        customer: '',
                         duration: '',
                       })
                     }>
@@ -200,7 +291,7 @@ class Checkin extends Component {
                     style={styles.buttonY}
                     onPress={() => this.checkin()}
                     disabled={this.check(
-                      this.state.isEmpName,
+                      this.state.isEmpCust,
                       this.state.isEmpDur,
                     )}>
                     <Text style={styles.buttonTextY}> CheckIn </Text>
@@ -208,17 +299,17 @@ class Checkin extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
         {/* Modal that use to CheckOut */}
         <Modal
           visible={this.state.modalCheckOut}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
-                <Text style={styles.titleView}> Update Customer </Text>
+                <Text style={styles.titleView}> CheckOut </Text>
               </View>
               <View style={styles.subViewInput}>
                 <Text style={styles.modalItem}> Room :*</Text>
@@ -238,10 +329,9 @@ class Checkin extends Component {
                       selectedValue={this.state.customer}
                       style={styles.inputStyle}
                       onValueChange={(itemValue, itemIndex) =>
-                        this.setState({language: itemValue})
+                        this.setState({customerId: itemValue})
                       }>
                       <Picker.Item label={customer} value={id} fontSize={30} />
-                      <Text />
                     </Picker>
                   </View>
                 </Item>
@@ -272,7 +362,7 @@ class Checkin extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     );
@@ -287,7 +377,21 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = dispatch => {
-  return {};
+  return {
+    handleCheckIn: (tok, duration, orderEndTime, customerId, roomId) =>
+      dispatch(
+        actionCheckin.handleCheckIn(
+          tok,
+          duration,
+          orderEndTime,
+          customerId,
+          roomId,
+        ),
+      ),
+    handleCheckOut: (token, id) =>
+      dispatch(actionCheckin.handleCheckOut(token, id)),
+    handleGetCheckin: tok => dispatch(actionCheckin.handleGetCheckins(tok)),
+  };
 };
 
 export default connect(
@@ -298,25 +402,24 @@ export default connect(
 const styles = StyleSheet.create({
   duration: {
     color: 'white',
+    marginBottom: 5,
   },
   duration2: {
     color: 'black',
+    textAlign: 'center',
+    marginBottom: 5,
   },
   viewToon: {
     justifyContent: 'center',
   },
   allRoom: {
-    marginRight: 10,
-    marginVertical: 15,
-    marginLeft: 10,
+    marginVertical: 1,
     borderRadius: 5,
     fontSize: 80,
     color: 'white',
   },
   allRoom2: {
-    marginRight: 10,
-    marginVertical: 15,
-    marginLeft: 10,
+    marginVertical: 1,
     borderRadius: 5,
     fontSize: 80,
     color: 'black',
@@ -362,8 +465,8 @@ const styles = StyleSheet.create({
   },
   allList: {
     marginVertical: 10,
-    width: 170,
-    height: 170,
+    width: width * 0.3,
+    height: width * 0.3,
     borderColor: 'white',
     borderWidth: 3,
     borderRadius: 30,
@@ -374,8 +477,8 @@ const styles = StyleSheet.create({
   },
   allList2: {
     marginVertical: 10,
-    width: 170,
-    height: 170,
+    width: width * 0.3,
+    height: width * 0.3,
     borderColor: 'black',
     borderWidth: 3,
     borderRadius: 30,
@@ -519,8 +622,8 @@ const styles = StyleSheet.create({
     height: 100,
   },
   flatList: {
-    marginTop: 20,
-    marginHorizontal: 40,
+    marginTop: height * 0.03,
+    alignSelf: 'center',
   },
   subViewInput: {
     marginTop: 10,

@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   Text,
   Modal,
-  Image,
   Dimensions,
   AsyncStorage,
+  FlatList,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {Header, Body, Title, Button, Input, Item} from 'native-base';
 
-import {FlatList} from 'react-native-gesture-handler';
 import {connect} from 'react-redux';
+import Spinner from 'react-native-loading-spinner-overlay';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as actionRoom from './../redux/actions/actionRooms';
 
@@ -26,6 +27,8 @@ class Room extends Component {
     modalAdd: false,
     modalEdit: false,
     isEmpty: true,
+    state: false,
+    spinner: false,
   };
   // async componentDidMount() {
   //   const tok = await AsyncStorage.getItem('token');
@@ -58,22 +61,28 @@ class Room extends Component {
       isEmpty: true,
     });
   }
-  async editRoom() {
-    const id = this.state.id;
-    const name = this.state.name;
-    const tok = await AsyncStorage.getItem('token');
-    await this.props.handleEditRoom(tok, name, id);
-    console.log(id, tok, name);
-    this.getData();
-    this.setState({modalEdit: false});
+  editRoom() {
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const id = this.state.id;
+      const name = this.state.name;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleEditRoom(tok, name, id);
+      console.log(id, tok, name);
+      this.getData();
+      this.setState({modalEdit: false, spinner: false});
+    }, 1500);
   }
   async addRoom() {
-    const name = this.state.name;
-    const tok = await AsyncStorage.getItem('token');
-    await this.props.handleAddRoom(tok, name);
-    console.log(tok, name);
-    this.getData();
-    this.setState({modalAdd: false});
+    setTimeout(async () => {
+      this.setState({spinner: true});
+      const name = this.state.name;
+      const tok = await AsyncStorage.getItem('token');
+      await this.props.handleAddRoom(tok, name);
+      console.log(tok, name);
+      this.getData();
+      this.setState({modalAdd: false, spinner: false});
+    }, 1500);
   }
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
@@ -85,6 +94,13 @@ class Room extends Component {
     const {name} = this.state;
     return (
       <View style={styles.mainView}>
+        <View style={styles.container}>
+          <Spinner
+            visible={this.state.spinner}
+            textContent={'Loading...'}
+            textStyle={styles.spinnerTextStyle}
+          />
+        </View>
         <View style={{flex: 1.3}}>
           <Header style={styles.header}>
             <Body>
@@ -113,7 +129,7 @@ class Room extends Component {
           visible={this.state.modalAdd}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
                 <Text style={styles.titleView}> Add New Room </Text>
@@ -151,14 +167,14 @@ class Room extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
         {/* Modal that use to Edit an existing room */}
         <Modal
           visible={this.state.modalEdit}
           transparent={true}
           animationType={'fade'}>
-          <View style={styles.dimBg}>
+          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
             <View style={styles.modalBg}>
               <View style={styles.subViewTitle}>
                 <Text style={styles.titleView}> Edit Room </Text>
@@ -194,7 +210,7 @@ class Room extends Component {
                 </View>
               </View>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     );

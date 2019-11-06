@@ -43,7 +43,7 @@ app.group('/api/v1', router => {
   //
   //checkin
   router.get('/checkins', authenticated, CheckinController.showCheckin);
-  // router.post('/customer', authenticated, CustomerController.addCustomer);
+  router.post('/checkin', authenticated, CheckinController.checkin);
   // router.put('/customer/:id', authenticated, CustomerController.updateCustomer);
   //
   router.get('/webtoon', TodoController.findToonTitle);

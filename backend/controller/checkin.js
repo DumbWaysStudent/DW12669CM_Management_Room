@@ -1,20 +1,20 @@
 const models = require('../models');
-const room = models.rooms;
-const checkin = models.orders;
-const customer = models.customers;
+const rooms = models.rooms;
+const checkins = models.orders;
+const customers = models.customers;
 
 exports.showCheckin = async (req, res) => {
-  const find = await room.findAll({
+  const find = await rooms.findAll({
     attributes: ['id', 'name'],
     order: [['id', 'ASC']],
     include: [
       {
-        model: checkin,
+        model: checkins,
         as: 'order',
         required: false,
         include: [
           {
-            model: customer,
+            model: customers,
             as: 'customerId',
           },
         ],
@@ -23,14 +23,23 @@ exports.showCheckin = async (req, res) => {
   });
   res.send(find);
 };
-exports.addCustomer = (req, res) => {
-  const {name, identity_number, phone_number, image} = req.body;
-  checkin
+exports.checkin = (req, res) => {
+  const {
+    duration,
+    is_booked,
+    is_done,
+    order_end_time,
+    customer,
+    room,
+  } = req.body;
+  checkins
     .create({
-      name,
-      identity_number,
-      phone_number,
-      image,
+      duration,
+      is_booked,
+      is_done,
+      order_end_time,
+      customer,
+      room,
     })
     .then(result => {
       res.send({
@@ -48,10 +57,10 @@ exports.addCustomer = (req, res) => {
 
 exports.updateCustomer = (req, res) => {
   const {id} = req.params;
-  checkin
+  checkins
     .update(req.body, {where: {id}})
     .then(() => {
-      checkin
+      checkins
         .findOne({where: {id}})
         .then(result => {
           res.send({

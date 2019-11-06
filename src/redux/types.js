@@ -39,6 +39,6 @@ export const DELETE_CUST = 'DELETE_CUST';
 export const UPDATE_CUST = 'UPDATE_CUST';
 //orders
 export const GET_CHECKINS = 'GET_CHECKINS';
-export const ADD_CHECKINS = 'ADD_CHECKINS';
+export const CHECKINS = 'CHECKINS';
 export const DELETE_CHECKINS = 'DELETE_CHECKINS';
-export const UPDATE_CHECKINS = 'UPDATE_CHECKINS';
+export const CHECKOUT = 'CHECKOUT';

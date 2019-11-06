@@ -6,12 +6,11 @@ import {
   Text,
   AsyncStorage,
   Image,
-  Modal,
   Dimensions,
 } from 'react-native';
 import {Header, Title, Body, Card} from 'native-base';
+import {StackActions, NavigationActions} from 'react-navigation';
 import {connect} from 'react-redux';
-import Icon from 'react-native-vector-icons/FontAwesome';
 // const image= this.props.navigation.getParam('image');
 // const profName= this.props.navigation.getParam('name');
 const {width} = Dimensions.get('window');
@@ -28,11 +27,18 @@ export class Profile extends Component {
     const image = await AsyncStorage.getItem('image');
     const name = await AsyncStorage.getItem('name');
     const email = await AsyncStorage.getItem('email');
+    this.setData(image, name, email);
+  }
+  async setData(image, name, email) {
     this.setState({name, image, email});
   }
   async handleLogOut() {
     await AsyncStorage.removeItem('token');
-    await this.props.navigation.navigate('login');
+    const resetAction = StackActions.reset({
+      index: 0,
+      actions: [NavigationActions.navigate({routeName: 'login'})],
+    });
+    this.props.navigation.dispatch(resetAction);
   }
   handleEditProfile(item) {
     this.props.navigation.navigate('editProfile', {name: item});
@@ -41,6 +47,7 @@ export class Profile extends Component {
     this.props.navigation.navigate('myWebToon');
   }
   render() {
+    console.disableYellowBox = true;
     return (
       <View style={styles.mainView}>
         <View style={{flex: 1}}>
