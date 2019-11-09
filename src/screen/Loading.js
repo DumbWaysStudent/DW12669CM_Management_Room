@@ -1,12 +1,13 @@
 import React, {Component} from 'react';
-import {View, AsyncStorage} from 'react-native';
-import {Text} from 'native-base';
+import {View, AsyncStorage, ImageBackground, Dimensions} from 'react-native';
+import {Text, Spinner} from 'native-base';
 import {StackActions, NavigationActions} from 'react-navigation';
 import * as actionCustomer from './../redux/actions/actionCustomers';
 import * as actionRoom from './../redux/actions/actionRooms';
 import * as actionCheckin from './../redux/actions/actionOrders';
 import {connect} from 'react-redux';
 
+const {height, width} = Dimensions.get('window');
 class Loading extends Component {
   componentDidMount() {
     setTimeout(async () => {
@@ -28,21 +29,37 @@ class Loading extends Component {
   render() {
     console.disableYellowBox = true;
     return (
-      <View style={styles.view}>
-        <Text style={styles.text}>Lagi Loading ...</Text>
-      </View>
+      <ImageBackground
+        style={styles.imgBg}
+        source={{
+          uri:
+            'https://m.media-amazon.com/images/M/MV5BNzQ2MzQzNDktMTg4ZC00ZDE0LThhNmUtYWMxYmI3OTIzYzZlXkEyXkFqcGdeQXVyMzE4MDkyNTA@._V1_.jpg',
+        }}>
+        <View style={styles.view}>
+          <Text style={styles.text}>Welcome{'\n'}Please Wait </Text>
+          <Spinner visible={true} />
+        </View>
+      </ImageBackground>
     );
   }
 }
 
 const styles = {
   view: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    height,
+    width,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   text: {
     fontSize: 80,
+    textAlign: 'center',
+    color: '#eccc68',
+  },
+  imgBg: {
+    height,
+    width,
+    alignItems: 'center',
   },
 };
 

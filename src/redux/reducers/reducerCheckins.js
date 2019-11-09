@@ -1,6 +1,8 @@
 import * as types from '../types';
 
 const initialState = {
+  isLoading: false,
+  isError: false,
   checkins: [],
   response: [],
 };
@@ -44,16 +46,19 @@ export default function reducerCheckins(state = initialState, action) {
     case `${types.CHECKOUT}_PENDING`:
       return {
         ...state,
+        isLoading: true,
       };
     case `${types.CHECKOUT}_FULFILLED`:
       return {
         ...state,
         response: action.payload.data,
+        isLoading: false,
       };
     case `${types.CHECKOUT}_REJECTED`:
       return {
         ...state,
         isError: true,
+        isLoading: false,
       };
     default:
       return state;

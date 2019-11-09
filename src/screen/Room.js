@@ -17,6 +17,7 @@ import {connect} from 'react-redux';
 import Spinner from 'react-native-loading-spinner-overlay';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as actionRoom from './../redux/actions/actionRooms';
+import * as actionCheckin from './../redux/actions/actionOrders';
 
 const {height, width} = Dimensions.get('window');
 // console.log(webtoons);
@@ -87,6 +88,7 @@ class Room extends Component {
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
     await this.props.handleGetRooms(tok);
+    await this.props.handleGetCheckin(tok);
   };
   render() {
     console.disableYellowBox = true;
@@ -230,6 +232,7 @@ const mapDispatchToProps = dispatch => {
     handleAddRoom: (tok, name) =>
       dispatch(actionRoom.handleAddRooms(tok, name)),
     handleGetRooms: tok => dispatch(actionRoom.handleGetRooms(tok)),
+    handleGetCheckin: tok => dispatch(actionCheckin.handleGetCheckins(tok)),
   };
 };
 

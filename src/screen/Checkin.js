@@ -11,6 +11,7 @@ import {
   Picker,
   FlatList,
   KeyboardAvoidingView,
+  ImageBackground,
 } from 'react-native';
 import {Button, Header, Body, Title, Item, Input} from 'native-base';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -38,6 +39,7 @@ class Checkin extends Component {
   };
   componentWillMount() {
     this.getCurrentTime();
+    this.getData();
   }
   getCurrentTime = () => {
     this.setState({
@@ -56,12 +58,24 @@ class Checkin extends Component {
   }
   async autoCheckOut() {
     const data = this.props.checkinLocal.checkins;
-    data.map(item => {
+    const loading = this.props.checkinLocal.isLoading;
+    console.log(loading);
+    await data.map(async item => {
       item.order.length > 0
         ? moment(item.order[0].order_end_time).diff(moment(), 's') <= 0
-          ? (this.setState({orderId: item.order[0].id}), this.checkout())
+          ? loading === false
+            ? await (this.setState({orderId: item.order[0].id}),
+              console.log('mau checkout'),
+              this.checkout())
+            : null
           : null
         : null;
+      // if (item.order.length > 0) {
+      //   if ((moment.item.order[0].order_end_time).diff(moment(), 's') <= 0) {
+      //     this.setState({orderId: item.order[0].id});
+      //     await this.checkout();
+      //   }
+      // }
     });
   }
   listAll(item) {
@@ -134,7 +148,7 @@ class Checkin extends Component {
     this.setState({
       duration: Number(input),
       orderEndTime: moment()
-        .add(Number(input), 'm')
+        .add(Number(input), 's')
         .toJSON(),
     });
     let reg = /^[0-9]*$/;
@@ -151,32 +165,39 @@ class Checkin extends Component {
       return true;
     }
   }
-  checkin() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const {roomId, customerId, duration, orderEndTime} = this.state;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleCheckIn(
-        tok,
-        duration,
-        orderEndTime,
-        customerId,
-        roomId,
-      );
-      this.getData();
-      this.setState({modalCheckIn: false, spinner: false});
-    }, 1500);
+  async checkin() {
+    this.setState({spinner: true});
+    const {roomId, customerId, duration, orderEndTime} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleCheckIn(
+      tok,
+      duration,
+      orderEndTime,
+      customerId,
+      roomId,
+    );
+    await this.getData();
+    this.setState({
+      modalCheckIn: false,
+      spinner: false,
+      isEmpDur: true,
+      customerId: '',
+    });
   }
 
-  checkout() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const {orderId} = this.state;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleCheckOut(tok, orderId);
-      this.getData();
-      this.setState({modalCheckOut: false, spinner: false});
-    }, 1500);
+  async checkout() {
+    this.setState({spinner: true});
+    const {orderId} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleCheckOut(tok, orderId);
+    await this.getData();
+    this.setState({
+      modalCheckOut: false,
+      spinner: false,
+      duration: '',
+      customerId: '',
+    });
+    console.log('ini checkout');
   }
 
   getData = async () => {
@@ -209,9 +230,10 @@ class Checkin extends Component {
             </Body>
           </Header>
         </View>
-        <View style={{alignItems: 'flex-end'}} flex={0.8}>
-          <Text>{`${time}`}</Text>
-        </View>
+        {/* <ImageBackground style={styles.imgBg} source={{uri: 'https://ak3.picdn.net/shutterstock/videos/21658243/thumb/1.jpg'}}> */}
+        {/* <View style={{alignItems: 'flex-end'}} flex={0.8}>
+            <Text style={{color: 'blue'}}>{`${time}`}</Text>
+          </View> */}
         <View flex={9}>
           <FlatList
             numColumns={3}
@@ -221,6 +243,7 @@ class Checkin extends Component {
             keyExtractor={item => item.title}
           />
         </View>
+        {/* </ImageBackground> */}
         {/* Modal that is used to CheckIn */}
         <Modal
           visible={this.state.modalCheckIn}
@@ -282,6 +305,7 @@ class Checkin extends Component {
                         modalCheckIn: false,
                         customer: '',
                         duration: '',
+                        isEmpDur: false,
                       })
                     }>
                     <Text style={styles.buttonTextX}> Cancel </Text>
@@ -403,11 +427,13 @@ const styles = StyleSheet.create({
   duration: {
     color: 'white',
     marginBottom: 5,
+    fontSize: 25,
   },
   duration2: {
     color: 'black',
     textAlign: 'center',
     marginBottom: 5,
+    fontSize: 25,
   },
   viewToon: {
     justifyContent: 'center',
@@ -661,5 +687,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 40,
+  },
+  imgBg: {
+    height,
+    width,
+    marginTop: height * 0.09,
   },
 });

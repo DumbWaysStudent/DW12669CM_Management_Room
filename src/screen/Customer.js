@@ -69,8 +69,10 @@ export class Customer extends Component {
     modalEdit: false,
     avatarSource: '',
     spinner: false,
+    spinnerImage: false,
   };
   async uploadImageAsync(uri) {
+    this.setState({spinner: true});
     // Why are we using XMLHttpRequest? See:
     // https://github.com/expo/expo/issues/2402#issuecomment-443726662
     const blob = await new Promise((resolve, reject) => {
@@ -96,6 +98,7 @@ export class Customer extends Component {
     console.log('link', await snapshot.ref.getDownloadURL());
     this.setState({avatarSource: await snapshot.ref.getDownloadURL()});
     console.log(this.state.avatarSource);
+    this.setState({spinner: false});
     return await snapshot.ref.getDownloadURL();
   }
   imagePicker() {
@@ -317,7 +320,7 @@ export class Customer extends Component {
                     onChangeText={input => this.checkIdCard(input)}
                     style={styles.inputStyle}
                     autoCapitalize="none"
-                    keyboardType="email-address"
+                    keyboardType="number-pad"
                     placeholder="Input Customer Identity Number"
                   />
                 </Item>
@@ -327,7 +330,7 @@ export class Customer extends Component {
                     onChangeText={input => this.checkPhoneNum(input)}
                     style={styles.inputStyle}
                     autoCapitalize="none"
-                    keyboardType="email-address"
+                    keyboardType="phone-pad"
                     placeholder="Input Customer Phone Number"
                   />
                 </Item>
@@ -413,7 +416,7 @@ export class Customer extends Component {
                     value={identity_number}
                     style={styles.inputStyle}
                     autoCapitalize="none"
-                    keyboardType="email-address"
+                    keyboardType="phone-pad"
                     placeholder="Input Customer Identity Number"
                   />
                 </Item>
@@ -424,7 +427,7 @@ export class Customer extends Component {
                     value={phone_number}
                     style={styles.inputStyle}
                     autoCapitalize="none"
-                    keyboardType="email-address"
+                    keyboardType="number-pad"
                     placeholder="Input Customer Phone Number"
                   />
                 </Item>

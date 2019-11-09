@@ -4,7 +4,6 @@ import {createStackNavigator} from 'react-navigation-stack';
 import login from '../screen/Login';
 import loading from '../screen/Loading';
 import navBar from './NavBarHome';
-import test from './../screen/Test';
 
 const mainNav = createStackNavigator(
   {
@@ -22,12 +21,6 @@ const mainNav = createStackNavigator(
     },
     home: {
       screen: navBar,
-      navigationOptions: ({navigation}) => ({
-        header: null,
-      }),
-    },
-    test: {
-      screen: test,
       navigationOptions: ({navigation}) => ({
         header: null,
       }),

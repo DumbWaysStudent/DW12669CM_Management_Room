@@ -9,6 +9,7 @@ import {
   ImageBackground,
   Dimensions,
   KeyboardAvoidingView,
+  TextInput,
 } from 'react-native';
 import {Button, Input, Item} from 'native-base';
 import {StackActions, NavigationActions} from 'react-navigation';
@@ -27,6 +28,8 @@ export class Login extends Component {
       password: '',
       isPasswordValid: false,
       isMailValid: false,
+      creative: true,
+      spin: false,
     };
   }
 
@@ -55,6 +58,7 @@ export class Login extends Component {
     }
   }
   async handleLogin() {
+    this.setState({spin: true});
     const email = this.state.email;
     const password = this.state.password;
     await this.props.handleLogin(email, password);
@@ -67,6 +71,7 @@ export class Login extends Component {
         ['email', users.email],
         ['image', users.image],
       ]);
+      this.setState({spin: false});
       const resetAction = StackActions.reset({
         index: 0,
         actions: [NavigationActions.navigate({routeName: 'loading'})],
@@ -74,6 +79,7 @@ export class Login extends Component {
       this.props.navigation.dispatch(resetAction);
     } else {
       alert('Invalid email or password!');
+      this.setState({spin: false});
     }
   }
 
@@ -109,12 +115,18 @@ export class Login extends Component {
               <Text style={styles.inputTitle}> Password </Text>
               <Item style={styles.itemPass}>
                 <Input
-                  keyboardType="visible-password"
                   placeholder="input your password"
                   style={styles.input}
+                  secureTextEntry={this.state.creative}
                   onChangeText={password => this.checkPassword(password)}
                 />
-                <Icon name="eye" style={styles.icon} />
+                <Icon
+                  onPress={() =>
+                    this.setState({creative: !this.state.creative})
+                  }
+                  name={this.state.creative == true ? 'eye' : 'eye-slash'}
+                  style={styles.icon}
+                />
               </Item>
               <Button
                 rounded
@@ -124,9 +136,14 @@ export class Login extends Component {
                   this.state.isMailValid,
                   this.state.isPasswordValid,
                 )}>
-                <Text style={styles.input}>Login</Text>
+                <Text style={styles.butIn}>Login</Text>
               </Button>
             </View>
+            <Spinner
+              visible={this.state.spin}
+              textContent={'Loading...'}
+              textStyle={styles.spinnerTextStyle}
+            />
           </KeyboardAvoidingView>
         </ImageBackground>
       </View>
@@ -194,7 +211,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
   },
   input: {
-    color: '#f1f2f6',
+    color: '#30336b',
     fontSize: 25,
   },
   itemPass: {
@@ -212,5 +229,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     justifyContent: 'center',
     height: height * 0.06,
+  },
+  butIn: {
+    color: '#dff9fb',
+    fontSize: 25,
   },
 });
