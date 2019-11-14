@@ -40,5 +40,4 @@ export const UPDATE_CUST = 'UPDATE_CUST';
 //orders
 export const GET_CHECKINS = 'GET_CHECKINS';
 export const CHECKINS = 'CHECKINS';
-export const DELETE_CHECKINS = 'DELETE_CHECKINS';
 export const CHECKOUT = 'CHECKOUT';

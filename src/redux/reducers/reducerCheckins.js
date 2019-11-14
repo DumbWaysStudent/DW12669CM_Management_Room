@@ -14,32 +14,38 @@ export default function reducerCheckins(state = initialState, action) {
     case `${types.GET_CHECKINS}_PENDING`:
       return {
         ...state,
+        isLoading: true,
       };
     case `${types.GET_CHECKINS}_FULFILLED`:
       return {
         ...state,
         checkins: action.payload.data,
+        isLoading: false,
       };
     case `${types.GET_CHECKINS}_REJECTED`:
       return {
         ...state,
         isError: true,
+        isLoading: false,
       };
     //
     // =================== CHECKINS ================================
     case `${types.CHECKINS}_PENDING`:
       return {
         ...state,
+        isLoading: true,
       };
     case `${types.CHECKINS}_FULFILLED`:
       return {
         ...state,
         response: action.payload.data,
+        isLoading: false,
       };
     case `${types.CHECKINS}_REJECTED`:
       return {
         ...state,
         isError: true,
+        isLoading: false,
       };
     //
     // =================== CheckOut ================================

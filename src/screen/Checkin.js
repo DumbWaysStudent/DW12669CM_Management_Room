@@ -21,7 +21,6 @@ import * as actionCheckin from './../redux/actions/actionOrders';
 import {connect} from 'react-redux';
 
 const {height, width} = Dimensions.get('window');
-// console.log(webtoons);
 class Checkin extends Component {
   state = {
     roomId: '',
@@ -36,6 +35,7 @@ class Checkin extends Component {
     modalCheckIn: false,
     modalCheckOut: false,
     time: '',
+    spinner: this.props.checkinLocal.isLoading,
   };
   componentWillMount() {
     this.getCurrentTime();
@@ -80,44 +80,35 @@ class Checkin extends Component {
   }
   listAll(item) {
     return (
-      <View key={item.id}>
-        <TouchableOpacity
-          style={item.order.length > 0 ? styles.allList2 : styles.allList}
-          onPress={() => {
-            if (item.order.length > 0) {
-              return this.modalCheckOut(item);
-            } else {
-              return this.modalCheckIn(item);
-            }
-          }}>
-          <Text
-            style={item.order.length > 0 ? styles.allRoom2 : styles.allRoom}>
-            {' '}
-            {item.name}{' '}
-          </Text>
-          <Text
-            style={item.order.length > 0 ? styles.duration2 : styles.duration}>
-            {item.order.length > 0
-              ? item.order[0].customerId.name +
-                '\n' +
-                moment(item.order[0].order_end_time).diff(moment(), 'hour') +
-                ' : ' +
-                (moment(item.order[0].order_end_time).diff(
-                  moment(),
-                  'minutes',
-                ) %
-                  60) +
-                ' : ' +
-                (moment(item.order[0].order_end_time).diff(
-                  moment(),
-                  'seconds',
-                ) %
-                  60) +
-                ' Left'
-              : 'available'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={item.order.length > 0 ? styles.allList2 : styles.allList}
+        onPress={() => {
+          if (item.order.length > 0) {
+            return this.modalCheckOut(item);
+          } else {
+            return this.modalCheckIn(item);
+          }
+        }}>
+        <Text style={item.order.length > 0 ? styles.allRoom2 : styles.allRoom}>
+          {' '}
+          {item.name}{' '}
+        </Text>
+        <Text
+          style={item.order.length > 0 ? styles.duration2 : styles.duration}>
+          {item.order.length > 0
+            ? item.order[0].customerId.name +
+              '\n' +
+              moment(item.order[0].order_end_time).diff(moment(), 'hour') +
+              ' : ' +
+              (moment(item.order[0].order_end_time).diff(moment(), 'minutes') %
+                60) +
+              ' : ' +
+              (moment(item.order[0].order_end_time).diff(moment(), 'seconds') %
+                60) +
+              ' Left'
+            : 'available'}
+        </Text>
+      </TouchableOpacity>
     );
   }
   modalCheckIn(item) {
@@ -148,7 +139,7 @@ class Checkin extends Component {
     this.setState({
       duration: Number(input),
       orderEndTime: moment()
-        .add(Number(input), 's')
+        .add(Number(input), 'm')
         .toJSON(),
     });
     let reg = /^[0-9]*$/;
@@ -179,7 +170,7 @@ class Checkin extends Component {
     await this.getData();
     this.setState({
       modalCheckIn: false,
-      spinner: false,
+      spinner: this.props.checkinLocal.isLoading,
       isEmpDur: true,
       customerId: '',
     });
@@ -193,11 +184,10 @@ class Checkin extends Component {
     await this.getData();
     this.setState({
       modalCheckOut: false,
-      spinner: false,
+      spinner: this.props.checkinLocal.isLoading,
       duration: '',
       customerId: '',
     });
-    console.log('ini checkout');
   }
 
   getData = async () => {
@@ -215,179 +205,198 @@ class Checkin extends Component {
     // console.log('duration    :' + this.state.duration);
     // console.log('endTime     :' + this.state.orderEndTime);
     return (
-      <View style={styles.mainView}>
-        <View style={styles.container}>
-          <Spinner
-            visible={this.state.spinner}
-            textContent={'Loading...'}
-            textStyle={styles.spinnerTextStyle}
-          />
-        </View>
-        <View style={{flex: 1.5}}>
-          <Header style={styles.header}>
-            <Body>
-              <Title style={styles.titleHeader}> Checkin </Title>
-            </Body>
-          </Header>
-        </View>
-        {/* <ImageBackground style={styles.imgBg} source={{uri: 'https://ak3.picdn.net/shutterstock/videos/21658243/thumb/1.jpg'}}> */}
-        {/* <View style={{alignItems: 'flex-end'}} flex={0.8}>
+      <View style={{flex: 1}}>
+        <View style={styles.mainView}>
+          <View>
+            <Spinner
+              visible={this.state.spinner}
+              textContent={'Loading...'}
+              textStyle={styles.spinnerTextStyle}
+            />
+          </View>
+          <View style={{flex: 1}}>
+            <Header style={styles.header}>
+              <Body>
+                <Title style={styles.titleHeader}> Checkin </Title>
+              </Body>
+            </Header>
+          </View>
+          <ImageBackground
+            style={styles.imgBg}
+            source={{
+              uri:
+                'https://ak3.picdn.net/shutterstock/videos/21658243/thumb/1.jpg',
+            }}>
+            {/* <View style={{alignItems: 'flex-end'}} flex={0.8}>
             <Text style={{color: 'blue'}}>{`${time}`}</Text>
           </View> */}
-        <View flex={9}>
-          <FlatList
-            numColumns={3}
-            style={styles.flatList}
-            data={checkins}
-            renderItem={({item}) => this.listAll(item)}
-            keyExtractor={item => item.title}
-          />
+            <View flex={9}>
+              <FlatList
+                numColumns={3}
+                style={styles.flatList}
+                data={checkins}
+                renderItem={({item}) => this.listAll(item)}
+                keyExtractor={item => item.title}
+              />
+            </View>
+          </ImageBackground>
         </View>
-        {/* </ImageBackground> */}
-        {/* Modal that is used to CheckIn */}
-        <Modal
-          visible={this.state.modalCheckIn}
-          transparent={true}
-          animationType={'fade'}>
-          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
-            <View style={styles.modalBg}>
-              <View style={styles.subViewTitle}>
-                <Text style={styles.titleView}> CheckIn </Text>
+        <View>
+          {/* Modal that is used to CheckIn */}
+          <Modal
+            visible={this.state.modalCheckIn}
+            transparent={true}
+            animationType={'fade'}>
+            <KeyboardAvoidingView
+              style={styles.dimBg}
+              behavior="padding"
+              enabled>
+              <View style={styles.modalBg}>
+                <View style={styles.subViewTitle}>
+                  <Text style={styles.titleView}> CheckIn </Text>
+                </View>
+                <View style={styles.subViewInput}>
+                  <View>
+                    <Text style={styles.modalItem}> Room :</Text>
+                    <Item>
+                      <Input
+                        style={styles.inputStyle}
+                        autoCapitalize="none"
+                        disabled
+                        value={room}
+                      />
+                    </Item>
+                    <Text style={styles.modalItem}> Customer :*</Text>
+                    <Item>
+                      <View style={styles.inputStyle}>
+                        <Picker
+                          selectedValue={this.state.customerId}
+                          mode={'dropdown'}
+                          style={styles.inputStyle}
+                          onValueChange={item => this.checkCustomer(item)}>
+                          {cust.map((item, index) => {
+                            return (
+                              <Picker.Item
+                                label={item.name}
+                                value={item.id}
+                                key={index}
+                              />
+                            );
+                          })}
+                        </Picker>
+                      </View>
+                    </Item>
+                    <Text style={styles.modalItem}> Duration :*</Text>
+                    <Item>
+                      <Input
+                        onChangeText={input => this.checkDuration(input)}
+                        style={styles.inputStyle}
+                        autoCapitalize="none"
+                        keyboardType="number-pad"
+                        placeholder="... in Minute"
+                      />
+                    </Item>
+                  </View>
+                  <View style={styles.viewModalButt}>
+                    <Button
+                      rounded
+                      style={styles.buttonX}
+                      onPress={() =>
+                        this.setState({
+                          modalCheckIn: false,
+                          customer: '',
+                          duration: '',
+                          isEmpDur: false,
+                        })
+                      }>
+                      <Text style={styles.buttonTextX}> Cancel </Text>
+                    </Button>
+                    <Button
+                      rounded
+                      style={styles.buttonY}
+                      onPress={() => this.checkin()}
+                      disabled={this.check(
+                        this.state.isEmpCust,
+                        this.state.isEmpDur,
+                      )}>
+                      <Text style={styles.buttonTextY}> CheckIn </Text>
+                    </Button>
+                  </View>
+                </View>
               </View>
-              <View style={styles.subViewInput}>
-                <View>
-                  <Text style={styles.modalItem}> Room :</Text>
+            </KeyboardAvoidingView>
+          </Modal>
+          {/* Modal that use to CheckOut */}
+          <Modal
+            visible={this.state.modalCheckOut}
+            transparent={true}
+            animationType={'fade'}>
+            <KeyboardAvoidingView
+              style={styles.dimBg}
+              behavior="padding"
+              enabled>
+              <View style={styles.modalBg}>
+                <View style={styles.subViewTitle}>
+                  <Text style={styles.titleView}> CheckOut </Text>
+                </View>
+                <View style={styles.subViewInput}>
+                  <Text style={styles.modalItem}> Room :*</Text>
                   <Item>
                     <Input
+                      value={room}
                       style={styles.inputStyle}
                       autoCapitalize="none"
                       disabled
-                      value={room}
                     />
                   </Item>
                   <Text style={styles.modalItem}> Customer :*</Text>
                   <Item>
                     <View style={styles.inputStyle}>
                       <Picker
-                        selectedValue={this.state.customerId}
-                        mode={'dropdown'}
+                        enabled={false}
+                        selectedValue={this.state.customer}
                         style={styles.inputStyle}
-                        onValueChange={item => this.checkCustomer(item)}>
-                        {cust.map((item, index) => {
-                          return (
-                            <Picker.Item
-                              label={item.name}
-                              value={item.id}
-                              key={index}
-                            />
-                          );
-                        })}
+                        onValueChange={(itemValue, itemIndex) =>
+                          this.setState({customerId: itemValue})
+                        }>
+                        <Picker.Item
+                          label={customer}
+                          value={id}
+                          fontSize={30}
+                        />
                       </Picker>
                     </View>
                   </Item>
                   <Text style={styles.modalItem}> Duration :*</Text>
                   <Item>
                     <Input
-                      onChangeText={input => this.checkDuration(input)}
+                      value={`${duration}`}
                       style={styles.inputStyle}
                       autoCapitalize="none"
-                      keyboardType="number-pad"
-                      placeholder="... in Minute"
+                      disabled
                     />
                   </Item>
-                </View>
-                <View style={styles.viewModalButt}>
-                  <Button
-                    rounded
-                    style={styles.buttonX}
-                    onPress={() =>
-                      this.setState({
-                        modalCheckIn: false,
-                        customer: '',
-                        duration: '',
-                        isEmpDur: false,
-                      })
-                    }>
-                    <Text style={styles.buttonTextX}> Cancel </Text>
-                  </Button>
-                  <Button
-                    rounded
-                    style={styles.buttonY}
-                    onPress={() => this.checkin()}
-                    disabled={this.check(
-                      this.state.isEmpCust,
-                      this.state.isEmpDur,
-                    )}>
-                    <Text style={styles.buttonTextY}> CheckIn </Text>
-                  </Button>
-                </View>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
-        {/* Modal that use to CheckOut */}
-        <Modal
-          visible={this.state.modalCheckOut}
-          transparent={true}
-          animationType={'fade'}>
-          <KeyboardAvoidingView style={styles.dimBg} behavior="padding" enabled>
-            <View style={styles.modalBg}>
-              <View style={styles.subViewTitle}>
-                <Text style={styles.titleView}> CheckOut </Text>
-              </View>
-              <View style={styles.subViewInput}>
-                <Text style={styles.modalItem}> Room :*</Text>
-                <Item>
-                  <Input
-                    value={room}
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    disabled
-                  />
-                </Item>
-                <Text style={styles.modalItem}> Customer :*</Text>
-                <Item>
-                  <View style={styles.inputStyle}>
-                    <Picker
-                      enabled={false}
-                      selectedValue={this.state.customer}
-                      style={styles.inputStyle}
-                      onValueChange={(itemValue, itemIndex) =>
-                        this.setState({customerId: itemValue})
+                  <View style={styles.viewModalButt}>
+                    <Button
+                      rounded
+                      style={styles.buttonX}
+                      onPress={() =>
+                        this.setState({modalCheckOut: false, name: '', id: ''})
                       }>
-                      <Picker.Item label={customer} value={id} fontSize={30} />
-                    </Picker>
+                      <Text style={styles.buttonTextX}> Cancel </Text>
+                    </Button>
+                    <Button
+                      rounded
+                      style={styles.buttonY}
+                      onPress={() => this.checkout()}>
+                      <Text style={styles.buttonTextY}> CheckOut </Text>
+                    </Button>
                   </View>
-                </Item>
-                <Text style={styles.modalItem}> Duration :*</Text>
-                <Item>
-                  <Input
-                    value={`${duration}`}
-                    style={styles.inputStyle}
-                    autoCapitalize="none"
-                    disabled
-                  />
-                </Item>
-                <View style={{flexDirection: 'row', justifyContent: 'center'}}>
-                  <Button
-                    rounded
-                    style={styles.buttonX}
-                    onPress={() =>
-                      this.setState({modalCheckOut: false, name: '', id: ''})
-                    }>
-                    <Text style={styles.buttonTextX}> Cancel </Text>
-                  </Button>
-                  <Button
-                    rounded
-                    style={styles.buttonY}
-                    onPress={() => this.checkout()}>
-                    <Text style={styles.buttonTextY}> CheckOut </Text>
-                  </Button>
                 </View>
               </View>
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
+            </KeyboardAvoidingView>
+          </Modal>
+        </View>
       </View>
     );
   }
@@ -426,106 +435,58 @@ export default connect(
 const styles = StyleSheet.create({
   duration: {
     color: 'white',
-    marginBottom: 5,
-    fontSize: 25,
+    marginBottom: height * 0.01,
+    fontSize: height * 0.025,
   },
   duration2: {
     color: 'black',
     textAlign: 'center',
-    marginBottom: 5,
-    fontSize: 25,
-  },
-  viewToon: {
-    justifyContent: 'center',
+    marginBottom: height * 0.01,
+    fontSize: height * 0.025,
   },
   allRoom: {
-    marginVertical: 1,
-    borderRadius: 5,
-    fontSize: 80,
+    fontSize: height * 0.075,
     color: 'white',
   },
   allRoom2: {
-    marginVertical: 1,
-    borderRadius: 5,
-    fontSize: 80,
+    fontSize: height * 0.075,
     color: 'black',
   },
-  favoriteToon: {
-    height: 200,
-    width: 170,
-    borderWidth: 3,
-    borderColor: 'silver',
-    marginRight: 10,
-    borderRadius: 5,
-  },
-  search: {
-    justifyContent: 'center',
-    marginRight: 5,
-    marginTop: 4,
-    fontSize: 30,
-  },
-  view: {
-    backgroundColor: 'blue',
-    flexDirection: 'row',
-    borderColor: 'silver',
-    borderWidth: 3,
-    marginTop: 20,
-    height: 60,
-    borderRadius: 5,
-    justifyContent: 'center',
-  },
-  icon: {
-    width: 40,
-    height: 40,
-  },
-  showSize: {
-    height: '100%',
-  },
-  favorite: {
-    fontSize: 40,
-    marginVertical: 15,
-  },
-  text: {
-    alignSelf: 'center',
-    fontSize: 20,
-  },
   allList: {
-    marginVertical: 10,
-    width: width * 0.3,
-    height: width * 0.3,
+    marginVertical: width * 0.01,
+    width: height * 0.17,
+    height: height * 0.17,
     borderColor: 'white',
     borderWidth: 3,
-    borderRadius: 30,
-    marginHorizontal: 10,
+    borderRadius: width * 0.015,
+    marginHorizontal: width * 0.01,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     backgroundColor: 'green',
   },
   allList2: {
-    marginVertical: 10,
-    width: width * 0.3,
-    height: width * 0.3,
+    marginVertical: width * 0.01,
+    width: height * 0.17,
+    height: height * 0.17,
     borderColor: 'black',
     borderWidth: 3,
-    borderRadius: 30,
-    marginHorizontal: 10,
+    borderRadius: width * 0.015,
+    marginHorizontal: width * 0.01,
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     backgroundColor: '#f7f1e3',
-  },
-  flatList2: {
-    marginTop: 20,
-    marginHorizontal: 15,
   },
   header: {
     backgroundColor: '#718093',
-    height: 100,
+    height: height * 0.09,
     justifyContent: 'center',
   },
   titleHeader: {
     alignSelf: 'center',
     color: 'white',
-    fontSize: 40,
+    fontSize: height * 0.04,
   },
   mainView: {
     backgroundColor: '#dfe4ea',
@@ -533,147 +494,68 @@ const styles = StyleSheet.create({
   },
   modalItem: {
     alignItems: 'flex-start',
-    fontSize: 45,
-    marginTop: 10,
+    fontSize: height * 0.045,
+    marginTop: height * 0.015,
     fontStyle: 'italic',
   },
-  fab: {
-    backgroundColor: '#2f3640',
-    width: 80,
-    height: 80,
-    borderRadius: 100,
-    position: 'absolute',
-  },
-  toon: {
-    justifyContent: 'center',
-    width: '100%',
-    height: 400,
-  },
-  listToon: {
-    height: 120,
-    width: 120,
-    borderWidth: 1,
-    borderColor: '#f1f2f6',
-    marginBottom: 5,
-    marginRight: 10,
-    marginTop: 5,
-    borderRadius: 100,
-  },
-  listDetailToon: {
-    marginRight: 30,
-    justifyContent: 'center',
-    backgroundColor: '#2f3640',
-  },
-  title: {
-    fontSize: 25,
-    marginRight: 30,
-    color: 'white',
-  },
-  row: {
-    backgroundColor: '#2f3640',
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-  },
-  iconProfile: {
-    marginLeft: 130,
-    marginTop: -45,
-    fontSize: 50,
-    color: 'grey',
-    alignSelf: 'center',
-  },
-  imageProfile: {
-    borderWidth: 2,
-    borderColor: 'silver',
-    alignSelf: 'center',
-    width: 200,
-    height: 200,
-    marginTop: 25,
-    borderRadius: 100,
-  },
-  button: {
-    marginTop: 20,
-    justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 100,
-  },
-  fabIcon: {
-    fontSize: 40,
-    color: 'white',
-  },
   buttonX: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
     backgroundColor: '#f1f2f6',
   },
   buttonY: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
   },
   buttonTextX: {
-    fontSize: 35,
+    fontSize: height * 0.035,
     color: 'black',
   },
   buttonTextY: {
-    fontSize: 35,
+    fontSize: height * 0.035,
     color: 'white',
   },
   modalBg: {
     backgroundColor: 'white',
     alignSelf: 'center',
     width: width * 0.9,
-    height: height * 0.7,
-    borderRadius: 15,
+    height: null,
+    borderRadius: width * 0.02,
     position: 'relative',
   },
-  allToon: {
-    backgroundColor: '#2f3542',
-    borderWidth: 3,
-    borderColor: '#2f3542',
-    marginHorizontal: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 100,
-    height: 100,
-  },
   flatList: {
-    marginTop: height * 0.03,
     alignSelf: 'center',
+    paddingTop: height * 0.02,
   },
   subViewInput: {
-    marginTop: 10,
-    marginHorizontal: 25,
+    marginTop: height * 0.015,
+    marginHorizontal: width * 0.03,
     justifyContent: 'center',
   },
   subViewTitle: {
-    marginTop: 40,
+    marginTop: height * 0.04,
     alignSelf: 'center',
     backgroundColor: 'white',
     justifyContent: 'center',
   },
   titleView: {
-    fontSize: 60,
+    fontSize: height * 0.06,
     fontWeight: 'bold',
     // backgroundColor: '#dfe4ea',
   },
   inputStyle: {
     borderColor: 'silver',
     borderWidth: 2,
-    borderRadius: 5,
-    fontSize: 35,
+    borderRadius: width * 0.015,
+    fontSize: height * 0.035,
     height: height * 0.06,
-    paddingLeft: 15,
+    paddingLeft: width * 0.02,
     alignContent: 'center',
     width: width * 0.8,
   },
@@ -686,7 +568,7 @@ const styles = StyleSheet.create({
   viewModalButt: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 40,
+    marginVertical: height * 0.04,
   },
   imgBg: {
     height,

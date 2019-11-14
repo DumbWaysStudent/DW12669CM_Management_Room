@@ -35,3 +35,14 @@ export const handleUpdateRooms = (token, name, id) => ({
     data: {name},
   }),
 });
+
+export const handleDeleteRoom = (token, id) => ({
+  type: types.DELETE_ROOMS,
+  payload: axios({
+    method: 'DELETE',
+    url: `https://backend-managementroom.herokuapp.com/api/v1/room/${id}`,
+    headers: {
+      Authorization: `${token}`,
+    },
+  }),
+});

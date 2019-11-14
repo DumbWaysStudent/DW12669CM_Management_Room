@@ -48,3 +48,14 @@ export const handleUpdateCust = (
     data: {name, identity_number, phone_number, image},
   }),
 });
+
+export const handleDeleteCust = (token, id) => ({
+  type: types.DELETE_CUST,
+  payload: axios({
+    method: 'DELETE',
+    url: `https://backend-managementroom.herokuapp.com/api/v1/customer/${id}`,
+    headers: {
+      Authorization: `${token}`,
+    },
+  }),
+});

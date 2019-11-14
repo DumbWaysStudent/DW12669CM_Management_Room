@@ -46,6 +46,7 @@ class Loading extends Component {
 
 const styles = {
   view: {
+    flex: 1,
     justifyContent: 'center',
     height,
     width,
@@ -57,6 +58,7 @@ const styles = {
     color: '#eccc68',
   },
   imgBg: {
+    flex: 1,
     height,
     width,
     alignItems: 'center',

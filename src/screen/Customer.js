@@ -11,6 +11,7 @@ import {
   AsyncStorage,
   FlatList,
   KeyboardAvoidingView,
+  ImageBackground,
 } from 'react-native';
 import {
   Header,
@@ -68,7 +69,7 @@ export class Customer extends Component {
     modalAdd: false,
     modalEdit: false,
     avatarSource: '',
-    spinner: false,
+    spinner: this.props.custLocal.isLoading,
     spinnerImage: false,
   };
   async uploadImageAsync(uri) {
@@ -123,14 +124,14 @@ export class Customer extends Component {
   }
   listFavoriteAll(item) {
     return (
-      <View key={item.id}>
+      <View key={item.id} style={{flex: 1}}>
         <Card style={styles.row}>
           <CardItem
-            style={styles.listDetailToon}
+            style={styles.listDetailCust}
             button
             onPress={() => this.showEdit(item)}>
             <View>
-              <Image source={{uri: item.image}} style={styles.listToon} />
+              <Image source={{uri: item.image}} style={styles.listCust} />
             </View>
             <View>
               <Text style={styles.title}>
@@ -197,44 +198,51 @@ export class Customer extends Component {
       isEmpPhoneNum: false,
     });
   }
-  editCustomer() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const {
-        id,
-        name,
-        identity_number,
-        phone_number,
-        avatarSource,
-      } = this.state;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleEditCustomer(
-        tok,
-        id,
-        name,
-        identity_number,
-        phone_number,
-        avatarSource,
-      );
-      this.getData();
-      this.setState({modalEdit: false, avatarSource: '', spinner: false});
-    }, 1500);
+  async delCustomer() {
+    this.setState({spinner: true});
+    const {id} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleDeleteCustomer(tok, id);
+    this.getData();
+    this.setState({
+      modalEdit: false,
+      avatarSource: '',
+      spinner: this.props.custLocal.isLoading,
+    });
   }
-  addCustomer() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const {name, identity_number, phone_number, avatarSource} = this.state;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleAddCustomer(
-        tok,
-        name,
-        identity_number,
-        phone_number,
-        avatarSource,
-      );
-      this.getData();
-      this.setState({modalAdd: false, avatarSource: '', spinner: false});
-    }, 1500);
+  async editCustomer() {
+    this.setState({spinner: true});
+    const {id, name, identity_number, phone_number, avatarSource} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleEditCustomer(
+      tok,
+      id,
+      name,
+      identity_number,
+      phone_number,
+      avatarSource,
+    );
+    this.getData();
+    this.setState({
+      modalEdit: false,
+      avatarSource: '',
+      spinner: this.props.custLocal.isLoading,
+    });
+    console.log(this.state.spinner);
+  }
+  async addCustomer() {
+    this.setState({spinner: true});
+    const {name, identity_number, phone_number, avatarSource} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleAddCustomer(
+      tok,
+      name,
+      identity_number,
+      phone_number,
+      avatarSource,
+    );
+    this.getData();
+    this.setState({modalAdd: false, avatarSource: '', spinner: false});
   }
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
@@ -251,38 +259,45 @@ export class Customer extends Component {
     const {name, identity_number, phone_number, image} = this.state;
     return (
       <View style={styles.mainView}>
-        <View style={{flex: 1.2}}>
+        <View style={{flex: 1}}>
           <Header style={styles.header}>
             <Body>
               <Title style={styles.titleHeader}> Customers </Title>
             </Body>
           </Header>
         </View>
-        <View style={{flex: 9, marginHorizontal: 20}}>
-          <View style={{flex: 0.8}}>
-            <View style={styles.view}>
-              <Input
-                style={styles.searchBar}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholder="Looking for something ..."
-                onChangeText={item => this.handleSearch(item)}
-              />
-              <TouchableOpacity>
-                <Icon name="search" size={40} style={styles.search} />
-              </TouchableOpacity>
+        <View style={{flex: 9, alignSelf: 'center'}}>
+          <ImageBackground
+            style={styles.imgBg}
+            source={{
+              uri:
+                'https://ak3.picdn.net/shutterstock/videos/21658243/thumb/1.jpg',
+            }}>
+            <View style={{flex: 0.9, marginVertical: height * 0.015}}>
+              <View style={styles.view}>
+                <Input
+                  style={styles.searchBar}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  placeholder="Looking for something ..."
+                  onChangeText={item => this.handleSearch(item)}
+                />
+                <TouchableOpacity>
+                  <Icon name="search" style={styles.search} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-          <View style={{flex: 10}}>
-            <FlatList
-              // style={styles.flatList1}
-              data={cust.filter(item =>
-                item.name.toLowerCase().includes(this.state.search),
-              )}
-              renderItem={({item}) => this.listFavoriteAll(item)}
-              keyExtractor={item => item.title}
-            />
-          </View>
+            <View style={{flex: 10}}>
+              <FlatList
+                data={cust.filter(item =>
+                  item.name.toLowerCase().includes(this.state.search),
+                )}
+                renderItem={({item}) => this.listFavoriteAll(item)}
+                keyExtractor={item => item.title}
+                style={{flex: 1}}
+              />
+            </View>
+          </ImageBackground>
         </View>
         <View style={{position: 'relative'}}>
           <Fab
@@ -351,7 +366,7 @@ export class Customer extends Component {
                   )}
                   <Icon name="camera" style={styles.iconProfile} />
                 </TouchableOpacity>
-                <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+                <View style={styles.viewModalButt2}>
                   <Button
                     rounded
                     style={styles.buttonX}
@@ -447,37 +462,47 @@ export class Customer extends Component {
                   )}
                   <Icon name="camera" style={styles.iconProfile} />
                 </TouchableOpacity>
-                <View style={{flexDirection: 'row', justifyContent: 'center'}}>
-                  <Button
-                    rounded
-                    style={styles.buttonX}
-                    onPress={() =>
-                      this.setState({
-                        modalEdit: false,
-                        name: '',
-                        id: '',
-                        identity_number: '',
-                        phone_number: '',
-                        isEmpName: true,
-                        isEmpIdCard: true,
-                        isEmpPhoneNum: true,
-                        avatarSource: '',
-                      })
-                    }
-                    disabled={false}>
-                    <Text style={styles.buttonTextX}> Cancel </Text>
-                  </Button>
-                  <Button
-                    rounded
-                    style={styles.buttonY}
-                    onPress={() => this.editCustomer()}
-                    disabled={this.check(
-                      this.state.isEmpName,
-                      this.state.isEmpIdCard,
-                      this.state.isEmpPhoneNum,
-                    )}>
-                    <Text style={styles.buttonTextY}> Edit </Text>
-                  </Button>
+                <View style={styles.viewModalButt}>
+                  <View style={styles.viewModalButt1}>
+                    <Button
+                      rounded
+                      style={styles.buttonX}
+                      onPress={() =>
+                        this.setState({
+                          modalEdit: false,
+                          name: '',
+                          id: '',
+                          identity_number: '',
+                          phone_number: '',
+                          isEmpName: true,
+                          isEmpIdCard: true,
+                          isEmpPhoneNum: true,
+                          avatarSource: '',
+                        })
+                      }
+                      disabled={false}>
+                      <Text style={styles.buttonTextX}> Cancel </Text>
+                    </Button>
+                    <Button
+                      rounded
+                      style={styles.buttonY}
+                      onPress={() => this.editCustomer()}
+                      disabled={this.check(
+                        this.state.isEmpName,
+                        this.state.isEmpIdCard,
+                        this.state.isEmpPhoneNum,
+                      )}>
+                      <Text style={styles.buttonTextY}> Edit </Text>
+                    </Button>
+                  </View>
+                  <View style={styles.viewDel}>
+                    <Button
+                      rounded
+                      style={styles.buttonDel}
+                      onPress={() => this.delCustomer()}>
+                      <Text style={styles.buttonTextDel}> Delete </Text>
+                    </Button>
+                  </View>
                 </View>
               </View>
             </View>
@@ -510,6 +535,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(
         actionCustomer.handleUpdateCust(tok, id, name, idCard, PhoNum, image),
       ),
+    handleDeleteCustomer: (tok, id) =>
+      dispatch(actionCustomer.handleDeleteCust(tok, id)),
   };
 };
 
@@ -521,8 +548,8 @@ export default connect(
 const styles = StyleSheet.create({
   modalItem: {
     alignItems: 'flex-start',
-    fontSize: 45,
-    marginTop: 10,
+    fontSize: height * 0.045,
+    marginTop: height * 0.01,
     fontStyle: 'italic',
   },
   spinnerTextStyle: {
@@ -530,80 +557,75 @@ const styles = StyleSheet.create({
   },
   fab: {
     backgroundColor: '#7f8fa6',
-    width: 80,
-    height: 80,
-    borderRadius: 100,
+    width: height * 0.08,
+    height: height * 0.08,
+    borderRadius: height * 0.04,
     position: 'absolute',
   },
   view: {
+    // marginVertical: height * 0.015,
     flexDirection: 'row',
-    borderColor: 'grey',
-    borderWidth: 3,
-    height: 60,
-    borderRadius: 5,
+    height: height * 0.07,
+    width: width * 0.93,
+    borderRadius: width * 0.01,
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
-  viewToon: {
-    marginBottom: 5,
-    borderColor: 'black',
-    borderWidth: 4,
-    flex: 4.25,
+  searchBar: {
+    marginStart: width * 0.01,
+    fontSize: height * 0.035,
+    color: 'white',
   },
   search: {
-    justifyContent: 'center',
-    marginRight: 5,
-    marginTop: 4,
+    marginEnd: width * 0.01,
+    fontSize: height * 0.045,
+    color: '#2f3640',
+    // marginTop: height * 0.01,
   },
-  toon: {
-    justifyContent: 'center',
-    width: '100%',
-    height: 400,
-  },
-  listToon: {
-    height: 120,
-    width: 120,
+  listCust: {
+    height: height * 0.13,
+    width: height * 0.13,
     borderWidth: 1,
     borderColor: '#f1f2f6',
-    marginBottom: 5,
-    marginRight: 10,
-    marginTop: 5,
-    borderRadius: 100,
+    borderRadius: height * 0.065,
   },
-  listDetailToon: {
-    marginRight: 30,
+  listDetailCust: {
+    marginStart: width * 0.01,
     justifyContent: 'center',
     backgroundColor: '#2f3640',
   },
   title: {
-    fontSize: 25,
-    marginRight: 30,
+    fontSize: height * 0.023,
+    marginStart: width * 0.04,
     color: 'white',
   },
-  favorite: {
-    fontSize: 20,
-    marginBottom: 20,
-    color: 'grey',
-  },
   row: {
+    alignSelf: 'center',
     backgroundColor: '#2f3640',
     flexDirection: 'row',
-    marginHorizontal: 20,
-    borderRadius: 15,
-    paddingHorizontal: 15,
+    borderRadius: width * 0.025,
+    height: height * 0.15,
+    width: width * 0.94,
+    paddingHorizontal: width * 0.02,
+    marginTop: height * 0.005,
   },
   header: {
     backgroundColor: '#718093',
-    height: 100,
+    height: height * 0.09,
     justifyContent: 'center',
   },
   titleHeader: {
     alignSelf: 'center',
     color: 'white',
-    fontSize: 40,
+    fontSize: height * 0.04,
   },
   iconProfile: {
-    marginLeft: 130,
-    marginTop: -45,
-    fontSize: 50,
+    marginLeft: width * 0.17,
+    marginTop: -height * 0.035,
+    fontSize: height * 0.05,
     color: 'grey',
     alignSelf: 'center',
   },
@@ -611,20 +633,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'silver',
     alignSelf: 'center',
-    width: width * 0.25,
+    width: height * 0.15,
     height: height * 0.15,
-    marginTop: 25,
-    borderRadius: 100,
-  },
-  button: {
-    marginTop: 20,
-    justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 100,
+    marginTop: height * 0.025,
+    borderRadius: height * 0.075,
   },
   fabIcon: {
-    fontSize: 40,
+    fontSize: height * 0.04,
     color: 'white',
   },
   mainView: {
@@ -632,112 +647,94 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonX: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
     backgroundColor: '#f1f2f6',
   },
   buttonY: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
+  },
+  buttonDel: {
+    marginTop: height * 0.02,
+    justifyContent: 'center',
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
+    backgroundColor: '#eb2f06',
   },
   buttonTextX: {
-    fontSize: 35,
+    fontSize: height * 0.035,
     color: 'black',
   },
   buttonTextY: {
-    fontSize: 35,
+    fontSize: height * 0.035,
+    color: 'white',
+  },
+  buttonTextDel: {
+    fontSize: height * 0.035,
     color: 'white',
   },
   modalBg: {
     backgroundColor: 'white',
     alignSelf: 'center',
     width: width * 0.9,
-    height: height * 0.85,
-    borderRadius: 15,
-  },
-  allToon: {
-    backgroundColor: '#2f3542',
-    borderWidth: 3,
-    borderColor: '#2f3542',
-    marginHorizontal: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 100,
-    height: 100,
-  },
-  favoriteToon: {
-    height: 200,
-    width: 170,
-    borderWidth: 3,
-    borderColor: 'silver',
-    marginRight: 10,
-    borderRadius: 5,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-  },
-  showSize: {
-    height: '100%',
-  },
-  text: {
-    color: '#ecf0f1',
-    alignSelf: 'center',
-    fontSize: 45,
-  },
-  allList: {
-    backgroundColor: '#2f3542',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 20,
-    marginHorizontal: 10,
-    borderColor: '#f1f2f6',
-    borderWidth: 3,
-    borderRadius: 30,
-    width: 140,
-    height: 140,
-  },
-  flatList: {
-    marginTop: 20,
-    marginHorizontal: 40,
+    height: null,
+    borderRadius: width * 0.015,
   },
   subViewInput: {
-    marginTop: 10,
-    marginHorizontal: 25,
+    marginTop: height * 0.01,
+    marginHorizontal: width * 0.025,
     justifyContent: 'center',
   },
   subViewTitle: {
-    marginTop: 40,
+    marginTop: height * 0.04,
     alignSelf: 'center',
     backgroundColor: 'white',
     justifyContent: 'center',
   },
   titleView: {
-    fontSize: 60,
+    fontSize: height * 0.06,
     fontWeight: 'bold',
-    // backgroundColor: '#dfe4ea',
   },
   inputStyle: {
     borderColor: 'silver',
     borderWidth: 2,
-    borderRadius: 5,
-    fontSize: 35,
-    height: 60,
+    borderRadius: width * 0.015,
+    fontSize: height * 0.035,
+    height: height * 0.06,
+    paddingLeft: width * 0.02,
     alignContent: 'center',
+    width: width * 0.8,
   },
   dimBg: {
     backgroundColor: 'rgba(0,0,0,0.7)',
     height,
     width,
     justifyContent: 'center',
+  },
+  viewModalButt1: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  viewModalButt: {
+    alignItems: 'center',
+    marginVertical: height * 0.02,
+  },
+  viewModalButt2: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginVertical: height * 0.02,
+  },
+  imgBg: {
+    flex: 1,
+    height,
+    width,
   },
 });

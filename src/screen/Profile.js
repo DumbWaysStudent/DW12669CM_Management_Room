@@ -13,7 +13,7 @@ import {StackActions, NavigationActions} from 'react-navigation';
 import {connect} from 'react-redux';
 // const image= this.props.navigation.getParam('image');
 // const profName= this.props.navigation.getParam('name');
-const {width} = Dimensions.get('window');
+const {height, width} = Dimensions.get('window');
 export class Profile extends Component {
   state = {
     // image: this.props.adminsLocal.login.image,
@@ -98,11 +98,11 @@ export default connect(/*mapStateToProps}*/)(Profile);
 const styles = {
   header: {
     backgroundColor: '#718093',
-    height: 100,
+    height: height * 0.09,
   },
   titleHeader: {
     color: 'white',
-    fontSize: 40,
+    fontSize: height * 0.04,
     alignSelf: 'center',
   },
   iconHeader: {
@@ -111,13 +111,14 @@ const styles = {
     marginRight: 10,
   },
   profile: {
-    marginTop: 40,
+    marginTop: height * 0.04,
     alignSelf: 'center',
-    flex: 2,
+    height: height * 0.2,
     width: width * 0.95,
     flexDirection: 'row',
-    borderRadius: 100,
-    paddingLeft: 10,
+    borderRadius: width * 0.425,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#2f3640',
   },
   mainView: {
@@ -127,26 +128,27 @@ const styles = {
   iconProfile: {
     borderWidth: 1,
     borderColor: '#f1f2f6',
-    width: 180,
-    height: 180,
-    borderRadius: 100,
+    width: height * 0.17,
+    height: height * 0.17,
+    borderRadius: height * 0.085,
     alignSelf: 'center',
   },
   iconName: {
-    fontSize: 34,
-    marginLeft: 20,
+    fontSize: height * 0.035,
+    marginStart: width * 0.03,
     color: 'white',
   },
   viewButtonText: {
-    paddingTop: 10,
     backgroundColor: '#353b48',
     alignSelf: 'center',
+    justifyContent: 'center',
+    paddingTop: height * 0.01,
     flex: 0.14,
     width: width * 0.4,
     borderRadius: 15,
   },
   logout: {
-    marginTop: 40,
+    marginTop: height * 0.04,
     flex: 5.2,
   },
   opacity: {
@@ -154,21 +156,7 @@ const styles = {
     alignSelf: 'center',
   },
   text: {
-    fontSize: 40,
-    marginBottom: 10,
-    flex: 9,
+    fontSize: height * 0.04,
     color: 'white',
-  },
-  iconButtonText: {
-    flex: 1,
-    marginTop: 5,
-    fontSize: 40,
-  },
-  imageProfile: {
-    alignSelf: 'center',
-    width: 200,
-    height: 200,
-    marginTop: 25,
-    borderRadius: 100,
   },
 };

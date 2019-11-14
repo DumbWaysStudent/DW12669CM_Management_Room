@@ -10,6 +10,8 @@ import {
   AsyncStorage,
   FlatList,
   KeyboardAvoidingView,
+  ImageBackground,
+  Alert,
 } from 'react-native';
 import {Header, Body, Title, Button, Input, Item} from 'native-base';
 
@@ -29,7 +31,7 @@ class Room extends Component {
     modalEdit: false,
     isEmpty: true,
     state: false,
-    spinner: false,
+    spinner: this.props.roomsLocal.isLoading,
   };
   // async componentDidMount() {
   //   const tok = await AsyncStorage.getItem('token');
@@ -37,13 +39,11 @@ class Room extends Component {
   // }
   listAll(item) {
     return (
-      <View style={styles.allList} key={item.id}>
-        <TouchableOpacity
-          style={styles.allToon}
-          onPress={() => this.showEdit(item)}>
-          <Text style={styles.text}> {item.name} </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.allList}
+        onPress={() => this.showEdit(item)}>
+        <Text style={styles.text}> {item.name} </Text>
+      </TouchableOpacity>
     );
   }
   checkInput(input) {
@@ -62,28 +62,36 @@ class Room extends Component {
       isEmpty: true,
     });
   }
-  editRoom() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const id = this.state.id;
-      const name = this.state.name;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleEditRoom(tok, name, id);
-      console.log(id, tok, name);
-      this.getData();
-      this.setState({modalEdit: false, spinner: false});
-    }, 1500);
+  async delRoom() {
+    this.setState({spinner: true});
+    const {id} = this.state;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleDeleteRoom(tok, id);
+    this.getData();
+    this.setState({
+      modalEdit: false,
+      avatarSource: '',
+      spinner: this.props.roomsLocal.isLoading,
+    });
+  }
+  async editRoom() {
+    this.setState({spinner: true});
+    const id = this.state.id;
+    const name = this.state.name;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleEditRoom(tok, name, id);
+    console.log(id, tok, name);
+    this.getData();
+    this.setState({modalEdit: false, spinner: this.props.roomsLocal.isLoading});
   }
   async addRoom() {
-    setTimeout(async () => {
-      this.setState({spinner: true});
-      const name = this.state.name;
-      const tok = await AsyncStorage.getItem('token');
-      await this.props.handleAddRoom(tok, name);
-      console.log(tok, name);
-      this.getData();
-      this.setState({modalAdd: false, spinner: false});
-    }, 1500);
+    this.setState({spinner: true});
+    const name = this.state.name;
+    const tok = await AsyncStorage.getItem('token');
+    await this.props.handleAddRoom(tok, name);
+    console.log(tok, name);
+    this.getData();
+    this.setState({modalAdd: false, spinner: this.props.roomsLocal.isLoading});
   }
   getData = async () => {
     const tok = await AsyncStorage.getItem('token');
@@ -103,29 +111,36 @@ class Room extends Component {
             textStyle={styles.spinnerTextStyle}
           />
         </View>
-        <View style={{flex: 1.3}}>
+        <View style={{}}>
           <Header style={styles.header}>
             <Body>
               <Title style={styles.titleHeader}> Rooms </Title>
             </Body>
           </Header>
         </View>
-        <View style={{flex: 9, marginHorizontal: 20}}>
-          <FlatList
-            numColumns={3}
-            style={styles.flatList}
-            data={rooms}
-            renderItem={({item}) => this.listAll(item)}
-            keyExtractor={item => item.title}
-          />
-        </View>
-        <View flex={1.3}>
-          <TouchableOpacity
-            style={styles.view}
-            onPress={() => this.setState({modalAdd: true, isEmpty: true})}>
-            <Icon name="plus" size={50} color={'white'} />
-          </TouchableOpacity>
-        </View>
+        <ImageBackground
+          style={styles.imgBg}
+          source={{
+            uri:
+              'https://ak3.picdn.net/shutterstock/videos/21658243/thumb/1.jpg',
+          }}>
+          <View style={{flex: 9}}>
+            <FlatList
+              numColumns={3}
+              style={styles.flatList}
+              data={rooms}
+              renderItem={({item}) => this.listAll(item)}
+              keyExtractor={item => item.title}
+            />
+          </View>
+          <View style={{flex: 1, marginBottom: height * 0.01}}>
+            <TouchableOpacity
+              style={styles.view}
+              onPress={() => this.setState({modalAdd: true, isEmpty: true})}>
+              <Icon name="plus" size={50} color={'white'} />
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
         {/* Modal that is used to Add a New Room */}
         <Modal
           visible={this.state.modalAdd}
@@ -142,14 +157,14 @@ class Room extends Component {
                   <Item>
                     <Input
                       onChangeText={input => this.checkInput(input)}
-                      style={{fontSize: 25}}
+                      style={styles.inputStyle}
                       autoCapitalize="none"
                       keyboardType="email-address"
                       placeholder="Input Room Name"
                     />
                   </Item>
                 </View>
-                <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+                <View style={styles.viewModalButt2}>
                   <Button
                     rounded
                     style={styles.buttonX}
@@ -187,28 +202,38 @@ class Room extends Component {
                   <Input
                     onChangeText={input => this.checkInput(input)}
                     value={name}
-                    style={{fontSize: 25}}
+                    style={styles.inputStyle}
                     autoCapitalize="none"
                     keyboardType="name-phone-pad"
                   />
                 </Item>
-                <View style={{flexDirection: 'row', justifyContent: 'center'}}>
-                  <Button
-                    rounded
-                    style={styles.buttonX}
-                    onPress={() =>
-                      this.setState({modalEdit: false, name: '', id: ''})
-                    }
-                    disabled={false}>
-                    <Text style={styles.buttonTextX}> Cancel </Text>
-                  </Button>
-                  <Button
-                    rounded
-                    style={styles.buttonY}
-                    onPress={() => this.editRoom()}
-                    disabled={this.state.isEmpty}>
-                    <Text style={styles.buttonTextY}> Edit </Text>
-                  </Button>
+                <View style={styles.viewModalButt}>
+                  <View style={styles.viewModalButt1}>
+                    <Button
+                      rounded
+                      style={styles.buttonX}
+                      onPress={() =>
+                        this.setState({modalEdit: false, name: '', id: ''})
+                      }
+                      disabled={false}>
+                      <Text style={styles.buttonTextX}> Cancel </Text>
+                    </Button>
+                    <Button
+                      rounded
+                      style={styles.buttonY}
+                      onPress={() => this.editRoom()}
+                      disabled={this.state.isEmpty}>
+                      <Text style={styles.buttonTextY}> Edit </Text>
+                    </Button>
+                  </View>
+                  <View style={styles.viewDel}>
+                    <Button
+                      rounded
+                      style={styles.buttonDel}
+                      onPress={() => this.delRoom()}>
+                      <Text style={styles.buttonTextDel}> Delete </Text>
+                    </Button>
+                  </View>
                 </View>
               </View>
             </View>
@@ -233,6 +258,8 @@ const mapDispatchToProps = dispatch => {
       dispatch(actionRoom.handleAddRooms(tok, name)),
     handleGetRooms: tok => dispatch(actionRoom.handleGetRooms(tok)),
     handleGetCheckin: tok => dispatch(actionCheckin.handleGetCheckins(tok)),
+    handleDeleteRoom: (tok, id) =>
+      dispatch(actionRoom.handleDeleteRoom(tok, id)),
   };
 };
 
@@ -243,111 +270,83 @@ export default connect(
 
 const styles = StyleSheet.create({
   buttonX: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
     backgroundColor: '#f1f2f6',
   },
   buttonY: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
-    marginBottom: 100,
-    marginHorizontal: 20,
-    width: 200,
-    height: 60,
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
+  },
+  buttonDel: {
+    marginTop: height * 0.02,
+    justifyContent: 'center',
+    marginHorizontal: width * 0.02,
+    width: width * 0.35,
+    height: height * 0.06,
+    backgroundColor: '#eb2f06',
   },
   buttonTextX: {
-    fontSize: 35,
+    fontSize: height * 0.035,
     color: 'black',
   },
   buttonTextY: {
-    fontSize: 35,
+    fontSize: height * 0.035,
+    color: 'white',
+  },
+  buttonTextDel: {
+    fontSize: height * 0.035,
     color: 'white',
   },
   modalBg: {
     backgroundColor: 'white',
     alignSelf: 'center',
     width: width * 0.9,
-    height: height * 0.4,
-    borderRadius: 15,
-  },
-  viewToon: {
-    justifyContent: 'center',
-  },
-  allToon: {
-    backgroundColor: '#2f3542',
-    borderWidth: 3,
-    borderColor: '#2f3542',
-    marginHorizontal: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 100,
-    height: 100,
-  },
-  favoriteToon: {
-    height: 200,
-    width: 170,
-    borderWidth: 3,
-    borderColor: 'silver',
-    marginRight: 10,
-    borderRadius: 5,
-  },
-  search: {
-    justifyContent: 'center',
-    marginRight: 5,
-    marginTop: 4,
-    fontSize: 30,
+    height: null,
+    borderRadius: width * 0.015,
   },
   view: {
-    marginHorizontal: 20,
+    flex: 1,
+    marginHorizontal: width * 0.02,
     backgroundColor: '#2f3542',
     borderColor: '#2f3542',
     borderWidth: 3,
-    borderRadius: 5,
+    borderRadius: width * 0.015,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 85,
-    marginVertical: 15,
-  },
-  icon: {
-    width: 40,
-    height: 40,
-  },
-  showSize: {
-    height: '100%',
-  },
-  favorite: {
-    fontSize: 40,
-    marginVertical: 15,
+    height: height * 0.085,
   },
   text: {
     color: '#ecf0f1',
     alignSelf: 'center',
-    fontSize: 45,
+    fontSize: height * 0.045,
   },
   allList: {
     backgroundColor: '#2f3542',
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 20,
-    marginHorizontal: 10,
+    marginVertical: width * 0.015,
+    marginHorizontal: width * 0.015,
     borderColor: '#f1f2f6',
     borderWidth: 3,
-    borderRadius: 30,
-    width: 140,
-    height: 140,
+    borderRadius: width * 0.015,
+    width: height * 0.14,
+    height: height * 0.14,
   },
   flatList: {
-    marginTop: 20,
-    marginHorizontal: 40,
+    marginTop: height * 0.015,
+    alignSelf: 'center',
   },
   header: {
     backgroundColor: '#718093',
-    height: 100,
+    height: height * 0.09,
     justifyContent: 'center',
   },
   mainView: {
@@ -357,27 +356,27 @@ const styles = StyleSheet.create({
   titleHeader: {
     alignSelf: 'center',
     color: 'white',
-    fontSize: 40,
+    fontSize: height * 0.04,
   },
   subViewInput: {
-    marginTop: 40,
-    marginHorizontal: 25,
+    marginTop: height * 0.04,
+    marginHorizontal: width * 0.025,
     justifyContent: 'center',
   },
   subViewTitle: {
-    marginTop: 40,
+    marginTop: height * 0.04,
     alignSelf: 'center',
     backgroundColor: 'white',
     justifyContent: 'center',
   },
   titleView: {
-    fontSize: 60,
+    fontSize: height * 0.06,
     fontWeight: 'bold',
     // backgroundColor: '#dfe4ea',
   },
   modalText: {
     alignItems: 'flex-start',
-    fontSize: 45,
+    fontSize: height * 0.045,
     fontStyle: 'italic',
   },
   dimBg: {
@@ -385,5 +384,31 @@ const styles = StyleSheet.create({
     height,
     width,
     justifyContent: 'center',
+  },
+  inputStyle: {
+    borderColor: 'silver',
+    borderWidth: 2,
+    borderRadius: width * 0.015,
+    fontSize: height * 0.035,
+    height: height * 0.06,
+    paddingLeft: width * 0.02,
+    alignContent: 'center',
+    width: width * 0.8,
+  },
+  viewModalButt1: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  viewModalButt: {
+    alignItems: 'center',
+    marginVertical: height * 0.02,
+  },
+  viewModalButt2: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginVertical: height * 0.02,
+  },
+  imgBg: {
+    flex: 1,
   },
 });
